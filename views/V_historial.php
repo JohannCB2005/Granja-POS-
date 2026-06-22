@@ -21,17 +21,36 @@ $ventas = $modelVenta->listar();
     <!-- History Card -->
     <div class="gp-card">
         <!-- Search and Filter bar -->
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-md-4">
+        <div class="row g-3 mb-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label for="searchVentas" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Buscar</label>
                 <div class="input-group">
-                    <span class="input-group-text bg-transparent border-end-0 text-muted" id="search-addon">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted" id="search-addon" style="height: 38px;">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" class="form-control border-start-0 ps-0 text-sm" id="searchVentas" placeholder="Buscar por código o cliente..." aria-label="Buscar" aria-describedby="search-addon" style="box-shadow: none; font-size: 14px;">
+                    <input type="text" class="form-control border-start-0 ps-0 text-sm" id="searchVentas" placeholder="Buscar por código o cliente..." aria-label="Buscar" aria-describedby="search-addon" style="box-shadow: none; font-size: 13.5px; height: 38px;">
                 </div>
             </div>
-            <div class="col-12 col-md-3">
-                <select class="form-select text-sm" id="statusFilter" style="font-size: 14px;">
+            <div class="col-6 col-md-2">
+                <label for="typeFilter" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Tipo Comprobante</label>
+                <select class="form-select text-sm" id="typeFilter" style="font-size: 13.5px; height: 38px; box-shadow: none;">
+                    <option value="all">Todos</option>
+                    <option value="1">Boleta</option>
+                    <option value="2">Factura</option>
+                    <option value="3">Nota de Venta</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="dateDesde" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Desde</label>
+                <input type="date" class="form-control text-sm" id="dateDesde" style="font-size: 13.5px; height: 38px; box-shadow: none;">
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="dateHasta" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Hasta</label>
+                <input type="date" class="form-control text-sm" id="dateHasta" style="font-size: 13.5px; height: 38px; box-shadow: none;">
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="statusFilter" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Estado</label>
+                <select class="form-select text-sm" id="statusFilter" style="font-size: 13.5px; height: 38px; box-shadow: none;">
                     <option value="all">Todos los estados</option>
                     <option value="Completada">Completadas</option>
                     <option value="Anulada">Anuladas</option>
@@ -44,14 +63,14 @@ $ventas = $modelVenta->listar();
             <table class="table align-middle text-sm" id="tableVentas" style="font-size: 14px;">
                 <thead>
                     <tr class="text-muted border-bottom" style="font-size: 13px;">
-                        <th scope="col" class="pb-3">Código</th>
+                        <th scope="col" class="pb-3 text-center">Código</th>
                         <th scope="col" class="pb-3">Fecha / Hora</th>
                         <th scope="col" class="pb-3">Cliente</th>
                         <th scope="col" class="pb-3">Vendedor</th>
-                        <th scope="col" class="pb-3 text-end">Total</th>
-                        <th scope="col" class="pb-3">Tipo</th>
-                        <th scope="col" class="pb-3">Estado</th>
-                        <th scope="col" class="pb-3 text-end">Acciones</th>
+                        <th scope="col" class="pb-3 text-center">Tipo</th>
+                        <th scope="col" class="pb-3 text-center">Total</th>
+                        <th scope="col" class="pb-3 text-center">Estado</th>
+                        <th scope="col" class="pb-3 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,8 +86,10 @@ $ventas = $modelVenta->listar();
                             <tr class="border-bottom venta-row" 
                                 data-cliente="<?php echo htmlspecialchars(strtolower($v['cliente'])); ?>"
                                 data-codigo="v-<?php echo str_pad($v['id_venta'], 6, '0', STR_PAD_LEFT); ?>"
-                                data-estado="<?php echo $v['estado'] == 1 ? 'Completada' : 'Anulada'; ?>">
-                                <td class="py-3 font-mono fw-bold text-dark">
+                                data-estado="<?php echo $v['estado'] == 1 ? 'Completada' : 'Anulada'; ?>"
+                                data-tipo="<?php echo $v['tipo_comprobante']; ?>"
+                                data-fecha="<?php echo date('Y-m-d', strtotime($v['fecha'])); ?>">
+                                <td class="py-3 font-mono fw-bold text-dark text-center">
                                     V-<?php echo str_pad($v['id_venta'], 6, '0', STR_PAD_LEFT); ?>
                                 </td>
                                 <td class="text-muted">
@@ -80,10 +101,7 @@ $ventas = $modelVenta->listar();
                                 <td class="text-muted">
                                     <?php echo htmlspecialchars($v['vendedor']); ?>
                                 </td>
-                                <td class="text-end fw-bold text-dark">
-                                    S/ <?php echo number_format($v['total'], 2); ?>
-                                </td>
-                                <td>
+                                <td class="text-center">
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
                                         <?php 
                                             if ($v['tipo_comprobante'] == 1) echo 'Boleta';
@@ -92,13 +110,16 @@ $ventas = $modelVenta->listar();
                                          ?>
                                     </span>
                                 </td>
-                                <td>
+                                <td class="text-center fw-bold text-dark">
+                                    S/ <?php echo number_format($v['total'], 2); ?>
+                                </td>
+                                <td class="text-center">
                                     <span class="status-badge <?php echo $v['estado'] == 1 ? 'gp-badge-success' : 'gp-badge-danger'; ?>">
                                         <?php echo $v['estado'] == 1 ? 'Completada' : 'Anulada'; ?>
                                     </span>
                                 </td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex gap-1">
+                                <td class="text-center">
+                                    <div class="d-inline-flex gap-1 justify-content-center">
                                         <button class="btn btn-link text-muted p-1 hover-text-primary view-details-btn" 
                                                 data-id="<?php echo $v['id_venta']; ?>"
                                                 data-codigo="V-<?php echo str_pad($v['id_venta'], 6, '0', STR_PAD_LEFT); ?>"
@@ -209,18 +230,34 @@ $ventas = $modelVenta->listar();
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchVentas');
         const statusFilter = document.getElementById('statusFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const dateDesde = document.getElementById('dateDesde');
+        const dateHasta = document.getElementById('dateHasta');
         const rows = document.querySelectorAll('.venta-row');
 
         // Real-time Filters
         function filterVentas() {
             const query = searchInput.value.toLowerCase().trim();
             const status = statusFilter.value;
+            const type = typeFilter.value;
+            const desde = dateDesde.value; // YYYY-MM-DD
+            const hasta = dateHasta.value; // YYYY-MM-DD
 
             rows.forEach(row => {
                 const textMatch = row.innerText.toLowerCase().includes(query);
                 const statusMatch = (status === 'all' || row.dataset.estado === status);
+                const typeMatch = (type === 'all' || row.dataset.tipo === type);
+                
+                let dateMatch = true;
+                const rowDate = row.dataset.fecha; // YYYY-MM-DD
+                if (desde && rowDate < desde) {
+                    dateMatch = false;
+                }
+                if (hasta && rowDate > hasta) {
+                    dateMatch = false;
+                }
 
-                if (textMatch && statusMatch) {
+                if (textMatch && statusMatch && typeMatch && dateMatch) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -230,6 +267,9 @@ $ventas = $modelVenta->listar();
 
         if (searchInput) searchInput.addEventListener('input', filterVentas);
         if (statusFilter) statusFilter.addEventListener('change', filterVentas);
+        if (typeFilter) typeFilter.addEventListener('change', filterVentas);
+        if (dateDesde) dateDesde.addEventListener('change', filterVentas);
+        if (dateHasta) dateHasta.addEventListener('change', filterVentas);
 
         // View Details Modal
         const detailsModal = new bootstrap.Modal(document.getElementById('detalleVentaModal'));

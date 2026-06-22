@@ -68,8 +68,8 @@ class M_Venta {
     public function listar() {
         try {
             $sql = "SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.estado,
-                           u.username AS cajero, 
-                           p.nombres_razon_social AS cliente_nombre, p.numero_documento 
+                           u.username AS vendedor, 
+                           CONCAT(p.nombres_razon_social, ' ', IFNULL(p.apellidos, '')) AS cliente, p.numero_documento 
                     FROM ventas v
                     INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
                     INNER JOIN clientes c ON v.id_cliente = c.id_cliente
