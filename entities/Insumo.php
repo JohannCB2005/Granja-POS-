@@ -1,27 +1,21 @@
 <?php
 class Insumo {
-    protected $id_insumo;
-    protected $id_categoria;
-    protected $nombre;
-    protected $precio_unitario;
-    protected $stock;
-    protected $estado;
+    public $id_insumo;
+    public $id_categoria;
+    public $id_unidad;
+    public $nombre;
+    public $precio_unitario;
+    public $stock;
+    public $estado;
 
-    public function __construct($id_categoria, $nombre, $precio_unitario) {
-        $this->id_categoria = $id_categoria;
-        $this->nombre = $nombre;
-        $this->precio_unitario = $precio_unitario;
-        
-        $this->stock = 0;
-        $this->estado = 1;
-    }
-
-    public function __get($propiedad) { 
-        if (property_exists($this, $propiedad)) return $this->$propiedad; return null; 
-    }
-
-    public function __set($propiedad, $valor) { 
-        if (property_exists($this, $propiedad)) $this->$propiedad = $valor; 
+    public function __construct($id_categoria = null, $id_unidad = null, $nombre = '', $precio_unitario = 0.0, $stock = 0.0, $id_insumo = null) {
+        $this->id_insumo      = $id_insumo;
+        $this->id_categoria   = $id_categoria;
+        $this->id_unidad      = $id_unidad;
+        $this->nombre         = $nombre;
+        $this->precio_unitario= $precio_unitario;
+        $this->stock          = $stock;
+        $this->estado         = 1;
     }
 }
-?>S
+?>

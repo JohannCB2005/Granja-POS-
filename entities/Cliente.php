@@ -1,19 +1,13 @@
 <?php
-require_once 'Persona.php';
+class Cliente {
+    public $id_cliente;
+    public $id_persona;
+    public $tipo_cliente;
 
-class Cliente extends Persona {
-    protected $id_cliente;
-    protected $tipo_cliente;
-
-    public function __construct($tipo_documento, $numero_documento, $nombres_razon_social, 
-                                $apellidos, $direccion, $telefono, $tipo_cliente) {
-        
-        parent::__construct($tipo_documento, $numero_documento, $nombres_razon_social, 
-                            $apellidos, $direccion, $telefono);
-
+    public function __construct($id_persona = null, $tipo_cliente = 1, $id_cliente = null) {
+        $this->id_cliente   = $id_cliente;
+        $this->id_persona   = $id_persona;
         $this->tipo_cliente = $tipo_cliente;
-        
-        $this->id_cliente = null;
     }
 }
 ?>

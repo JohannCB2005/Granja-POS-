@@ -1,6 +1,6 @@
 <?php
-require_once '../config/conexion.php';
-require_once '../entities/Venta.php';
+require_once dirname(__DIR__) . '/config/conexion.php';
+require_once dirname(__DIR__) . '/entities/Venta.php';
 
 class M_Venta {
     private static $instancia = null;
@@ -45,7 +45,11 @@ class M_Venta {
                 $jsonDetalles
             ]);
             
-            return true;
+            $stmtId = $this->conexion->prepare("SELECT id_venta FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1");
+            $stmtId->execute([$venta->id_usuario]);
+            $row = $stmtId->fetch();
+            return $row ? $row['id_venta'] : true;
+            
         } catch (PDOException $e) {
             return false;
         }
@@ -68,8 +72,8 @@ class M_Venta {
     public function listar() {
         try {
             $sql = "SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.estado,
-                           u.username AS cajero, 
-                           p.nombres_razon_social AS cliente_nombre, p.numero_documento 
+                           u.username AS vendedor, 
+                           CONCAT(p.nombres_razon_social, ' ', IFNULL(p.apellidos, '')) AS cliente, p.numero_documento 
                     FROM ventas v
                     INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
                     INNER JOIN clientes c ON v.id_cliente = c.id_cliente

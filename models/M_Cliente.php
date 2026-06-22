@@ -1,6 +1,6 @@
 <?php
-require_once '../config/conexion.php';
-require_once '../entities/Cliente.php';
+require_once dirname(__DIR__) . '/config/conexion.php';
+require_once dirname(__DIR__) . '/entities/Cliente.php';
 
 class M_Cliente {
     private static $instancia = null;
@@ -64,6 +64,21 @@ class M_Cliente {
             
             $stmt = $this->conexion->prepare($sql);
             $stmt->execute([$id_cliente]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+
+    // Obtener por Documento (DNI/RUC)
+    public function obtenerClientePorDocumento($numero_documento) {
+        try {
+            $sql = "SELECT p.*, c.id_cliente, c.tipo_cliente FROM clientes c
+                    INNER JOIN personas p ON c.id_persona = p.id_persona
+                    WHERE p.numero_documento = ? AND p.estado = 1";
+            
+            $stmt = $this->conexion->prepare($sql);
+            $stmt->execute([$numero_documento]);
             return $stmt->fetch();
         } catch (PDOException $e) {
             return false;
