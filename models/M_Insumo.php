@@ -1,6 +1,6 @@
 <?php
-require_once '../config/conexion.php';
-require_once '../entities/Insumo.php';
+require_once dirname(__DIR__) . '/config/conexion.php';
+require_once dirname(__DIR__) . '/entities/Insumo.php';
 
 class M_Insumo {
     private static $instancia = null;

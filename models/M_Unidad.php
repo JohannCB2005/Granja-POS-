@@ -1,8 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/config/conexion.php';
-require_once dirname(__DIR__) . '/entities/Rol.php';
 
-class M_Rol {
+class M_Unidad {
     private static $instancia = null;
     private $conexion;
 
@@ -20,7 +19,7 @@ class M_Rol {
 
     public function listar() {
         try {
-            $sql = "SELECT * FROM roles";
+            $sql = "SELECT * FROM unidades_medida WHERE estado = 1";
             $stmt = $this->conexion->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll();

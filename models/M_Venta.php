@@ -1,6 +1,6 @@
 <?php
-require_once '../config/conexion.php';
-require_once '../entities/Venta.php';
+require_once dirname(__DIR__) . '/config/conexion.php';
+require_once dirname(__DIR__) . '/entities/Venta.php';
 
 class M_Venta {
     private static $instancia = null;

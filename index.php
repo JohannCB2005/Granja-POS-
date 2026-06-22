@@ -1,34 +1,87 @@
 <?php
 session_start();
 
-// Si NO existe la sesión del usuario, cargamos la vista del Login desde la carpeta views
+// 1. Auth check
 if (!isset($_SESSION['id_usuario'])) {
     require_once 'views/V_login.php';
     exit;
 }
 
-// ==========================================
-// ZONA DEL SISTEMA (Usuario Logueado)
-// ==========================================
-// Aquí más adelante cargarás tu archivo de rutas (config/rutas.php)
-// Por ahora, dejamos un Dashboard temporal con Bootstrap para probar el éxito del login
+$rol = $_SESSION['rol'];
+
+// 2. Default route based on role
+$defaultModule = ($rol === 'Administrador') ? 'dashboard' : 'nueva-venta';
+$modulo = isset($_GET['modulo']) ? $_GET['modulo'] : $defaultModule;
+
+// 3. Define route permissions
+$routes = [
+    'dashboard' => ['Administrador'],
+    'categorias' => ['Administrador'],
+    'insumos' => ['Administrador', 'Vendedor'],
+    'usuarios' => ['Administrador'],
+    'clientes' => ['Administrador', 'Vendedor'],
+    'nueva-venta' => ['Administrador', 'Vendedor'],
+    'historial' => ['Administrador', 'Vendedor'],
+    'reportes' => ['Administrador']
+];
+
+// 4. Validate route exists and is allowed for the user's role
+if (!array_key_exists($modulo, $routes)) {
+    $modulo = $defaultModule;
+}
+
+if (!in_array($rol, $routes[$modulo])) {
+    // If not allowed, redirect to default
+    header("Location: index.php?modulo=" . $defaultModule);
+    exit;
+}
+
+// 5. Title for the header
+$titles = [
+    'dashboard' => 'Dashboard - Granja POS',
+    'categorias' => 'Categorías - Granja POS',
+    'insumos' => 'Insumos - Granja POS',
+    'usuarios' => 'Usuarios - Granja POS',
+    'clientes' => 'Clientes - Granja POS',
+    'nueva-venta' => 'Nueva Venta - Granja POS',
+    'historial' => 'Historial de Ventas - Granja POS',
+    'reportes' => 'Reportes - Granja POS'
+];
+$title = isset($titles[$modulo]) ? $titles[$modulo] : 'Granja POS';
+
+// 6. Include layout and render module view
+require_once 'views/layouts/header.php';
+require_once 'views/layouts/sidebar.php';
+require_once 'views/layouts/navbar.php';
+
+echo '<main class="main-content">';
+switch ($modulo) {
+    case 'dashboard':
+        require_once 'views/V_dashboard.php';
+        break;
+    case 'categorias':
+        require_once 'views/V_categorias.php';
+        break;
+    case 'insumos':
+        require_once 'views/V_insumos.php';
+        break;
+    case 'usuarios':
+        require_once 'views/V_usuarios.php';
+        break;
+    case 'clientes':
+        require_once 'views/V_clientes.php';
+        break;
+    case 'nueva-venta':
+        require_once 'views/V_nueva_venta.php';
+        break;
+    case 'historial':
+        require_once 'views/V_historial.php';
+        break;
+    case 'reportes':
+        require_once 'views/V_reportes.php';
+        break;
+}
+echo '</main>';
+
+require_once 'views/layouts/footer.php';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - POS Granja</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="alert alert-success shadow-sm">
-            <h4 class="alert-heading fw-bold">¡Bienvenido al sistema, <?php echo htmlspecialchars($_SESSION['nombres']); ?>!</h4>
-            <p>Has ingresado exitosamente con el rol de <strong><?php echo htmlspecialchars($_SESSION['rol']); ?></strong>.</p>
-            <hr>
-            <p class="mb-0">Este archivo <code>index.php</code> pronto servirá como el enrutador principal para los demás módulos.</p>
-        </div>
-    </div>
-</body>
-</html>
