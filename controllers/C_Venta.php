@@ -49,8 +49,9 @@ switch ($action) {
             $venta->agregarDetalle($detalle);
         }
 
-        if ($model->registrar($venta)) {
-            echo json_encode(["success" => true, "mensaje" => "Venta registrada con éxito."]);
+        $resultado = $model->registrar($venta);
+        if ($resultado !== false) {
+            echo json_encode(["success" => true, "mensaje" => "Venta registrada con éxito.", "id_venta" => $resultado]);
         } else {
             echo json_encode(["success" => false, "mensaje" => "Error al registrar la venta. Verifique el stock disponible de los insumos."]);
         }

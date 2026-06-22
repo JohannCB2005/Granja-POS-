@@ -16,7 +16,7 @@ $stmt = $dbh->query("SELECT COUNT(*) as count FROM insumos WHERE estado = 1");
 $activeProductsCount = intval($stmt->fetch()['count']);
 
 // Active customers count
-$stmt = $dbh->query("SELECT COUNT(*) as count FROM clientes WHERE estado = 1");
+$stmt = $dbh->query("SELECT COUNT(*) as count FROM clientes");
 $activeClientsCount = intval($stmt->fetch()['count']);
 
 // Top 5 most sold products list

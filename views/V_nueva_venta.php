@@ -385,6 +385,64 @@ $categorias = $modelCat->listar();
     </div>
 </div>
 
+  <!-- Modal: Imprimir Comprobante -->
+<div class="modal fade" id="imprimirTicketModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; height: 92vh;">
+            <div class="modal-header bg-white border-bottom py-3" style="flex-shrink: 0; border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 16px;">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    Comprobante registrado con éxito
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;" onclick="window.location.reload()"></button>
+            </div>
+
+            <!-- Selector de formato -->
+            <div class="d-flex justify-content-center gap-2 py-2 bg-light border-bottom" style="flex-shrink: 0;">
+                <button class="btn btn-success btn-sm px-3 ticket-format-btn active" data-format="80mm">
+                    <i class="bi bi-receipt"></i> Ticket 80mm
+                </button>
+                <button class="btn btn-outline-success btn-sm px-3 ticket-format-btn" data-format="58mm">
+                    <i class="bi bi-receipt"></i> Ticket 58mm
+                </button>
+                <button class="btn btn-outline-success btn-sm px-3 ticket-format-btn" data-format="a4">
+                    <i class="bi bi-file-earmark-text"></i> A4
+                </button>
+            </div>
+
+            <!-- Visor iframe (ocupa todo el espacio restante) -->
+            <div class="modal-body p-0 position-relative" style="flex: 1 1 auto; overflow: hidden; background-color: #525659;">
+                <!-- Spinner centrado -->
+                <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-white d-flex flex-column align-items-center" style="z-index: 20;">
+                    <div class="spinner-border mb-2" role="status"></div>
+                    <span style="font-size: 14px;">Generando comprobante...</span>
+                </div>
+                <!-- Iframe de vista previa -->
+                <iframe
+                    id="pdfPreviewFrame"
+                    src=""
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; z-index: 10; background: #fff;">
+                </iframe>
+            </div>
+
+            <!-- Footer acciones -->
+            <div class="modal-footer border-top bg-white py-2 px-4 d-flex justify-content-between align-items-center" style="flex-shrink: 0; border-radius: 0 0 12px 12px;">
+                <button class="btn btn-success d-flex align-items-center gap-2 px-4" onclick="printCurrentIframe()">
+                    <i class="bi bi-printer-fill"></i> Imprimir
+                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary px-4" onclick="window.location.href='index.php?modulo=historial'">
+                        <i class="bi bi-list-ul"></i> Ir al listado
+                    </button>
+                    <button class="btn btn-success px-4" onclick="window.location.reload()">
+                        <i class="bi bi-plus-lg"></i> Nueva venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // POS Shopping Cart State
@@ -1099,12 +1157,13 @@ $categorias = $modelCat->listar();
                                     title: '¡Venta Registrada!',
                                     text: result.mensaje,
                                     showConfirmButton: false,
-                                    timer: 1500
+                                    timer: 1000
                                 }).then(() => {
                                     cart = [];
                                     renderCart();
-                                    // Refresh the page to reload the catalog with updated stocks
-                                    window.location.reload();
+                                    
+                                    // Open Print Modal
+                                    openPrintModal(result.id_venta);
                                 });
                             } else {
                                 Swal.fire({
@@ -1127,5 +1186,57 @@ $categorias = $modelCat->listar();
                 });
             });
         }
+        
+        // --- PRINT MODAL LOGIC ---
+        let currentPrintId = null;
+        let currentPrintFormat = '80mm';
+
+        window.openPrintModal = function(id_venta) {
+            currentPrintId = id_venta;
+            const modal = new bootstrap.Modal(document.getElementById('imprimirTicketModal'));
+            modal.show();
+            loadIframePreview();
+        };
+
+        const formatBtns = document.querySelectorAll('.ticket-format-btn');
+        formatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                formatBtns.forEach(b => {
+                    b.classList.remove('btn-success', 'active');
+                    b.classList.add('btn-outline-success');
+                });
+                btn.classList.add('btn-success', 'active');
+                btn.classList.remove('btn-outline-success');
+                
+                currentPrintFormat = btn.dataset.format;
+                loadIframePreview();
+            });
+        });
+
+        function loadIframePreview() {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            const spinner = document.getElementById('pdfLoadingSpinner');
+            
+            iframe.style.display = 'none';
+            spinner.style.display = 'flex';
+            
+            // Build URL
+            const url = `views/V_ticket_print.php?id=${currentPrintId}&format=${currentPrintFormat}`;
+            
+            iframe.onload = function() {
+                spinner.style.display = 'none';
+                iframe.style.display = 'block';
+            };
+            
+            iframe.src = url;
+        }
+
+        window.printCurrentIframe = function() {
+            const iframe = document.getElementById('pdfPreviewFrame');
+            if (iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            }
+        };
     });
 </script>

@@ -131,6 +131,13 @@ $ventas = $modelVenta->listar();
                                                 title="Ver Detalle">
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
+                                        <!-- Botón Imprimir Comprobante -->
+                                        <button class="btn btn-link text-muted p-1 print-ticket-btn"
+                                                data-id="<?php echo $v['id_venta']; ?>"
+                                                title="Imprimir Comprobante"
+                                                style="color: #6b7280;">
+                                            <i class="bi bi-printer-fill"></i>
+                                        </button>
                                         <?php if ($v['estado'] == 1): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger cancel-sale-btn" 
                                                     data-id="<?php echo $v['id_venta']; ?>"
@@ -220,6 +227,53 @@ $ventas = $modelVenta->listar();
             </div>
             <div class="modal-footer border-0 p-4 pt-0">
                 <button type="button" class="btn btn-light fw-semibold w-100" data-bs-dismiss="modal" style="border-radius: 8px;">Cerrar Comprobante</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Imprimir Comprobante desde Historial -->
+<div class="modal fade" id="historialPrintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; height: 92vh;">
+            <div class="modal-header bg-white border-bottom py-3" style="flex-shrink: 0; border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 16px;">
+                    <i class="bi bi-printer-fill text-success"></i>
+                    Comprobante de Venta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
+            </div>
+
+            <!-- Selector de formato -->
+            <div class="d-flex justify-content-center gap-2 py-2 bg-light border-bottom" style="flex-shrink: 0;">
+                <button class="btn btn-success btn-sm px-3 hist-format-btn active" data-format="80mm">
+                    <i class="bi bi-receipt"></i> Ticket 80mm
+                </button>
+                <button class="btn btn-outline-success btn-sm px-3 hist-format-btn" data-format="58mm">
+                    <i class="bi bi-receipt"></i> Ticket 58mm
+                </button>
+                <button class="btn btn-outline-success btn-sm px-3 hist-format-btn" data-format="a4">
+                    <i class="bi bi-file-earmark-text"></i> A4
+                </button>
+            </div>
+
+            <!-- Visor iframe -->
+            <div class="modal-body p-0 position-relative" style="flex: 1 1 auto; overflow: hidden; background-color: #525659;">
+                <div id="histPrintSpinner" class="position-absolute top-50 start-50 translate-middle text-white d-flex flex-column align-items-center" style="z-index: 20;">
+                    <div class="spinner-border mb-2" role="status"></div>
+                    <span style="font-size: 14px;">Generando comprobante...</span>
+                </div>
+                <iframe id="histPrintFrame" src=""
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; z-index: 10; background: #fff;">
+                </iframe>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-top bg-white py-2 px-4 d-flex justify-content-between" style="flex-shrink: 0; border-radius: 0 0 12px 12px;">
+                <button class="btn btn-success d-flex align-items-center gap-2 px-4" id="histPrintBtn">
+                    <i class="bi bi-printer-fill"></i> Imprimir
+                </button>
+                <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -372,6 +426,75 @@ $ventas = $modelVenta->listar();
                     }
                 });
             });
+        });
+
+        // ---- PRINT TICKET MODAL ----
+        let histCurrentId     = null;
+        let histCurrentFormat = '80mm';
+
+        const histPrintModal  = new bootstrap.Modal(document.getElementById('historialPrintModal'));
+        const histPrintFrame  = document.getElementById('histPrintFrame');
+        const histPrintSpinner= document.getElementById('histPrintSpinner');
+        const histFormatBtns  = document.querySelectorAll('.hist-format-btn');
+
+        // Open modal when printer button is clicked
+        document.querySelectorAll('.print-ticket-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                histCurrentId     = btn.dataset.id;
+                histCurrentFormat = '80mm';
+
+                // Reset format buttons
+                histFormatBtns.forEach(b => {
+                    b.classList.remove('btn-success', 'active');
+                    b.classList.add('btn-outline-success');
+                });
+                histFormatBtns[0].classList.add('btn-success', 'active');
+                histFormatBtns[0].classList.remove('btn-outline-success');
+
+                histPrintModal.show();
+                loadHistIframe();
+            });
+        });
+
+        // Switch format
+        histFormatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                histFormatBtns.forEach(b => {
+                    b.classList.remove('btn-success', 'active');
+                    b.classList.add('btn-outline-success');
+                });
+                btn.classList.add('btn-success', 'active');
+                btn.classList.remove('btn-outline-success');
+                histCurrentFormat = btn.dataset.format;
+                loadHistIframe();
+            });
+        });
+
+        function loadHistIframe() {
+            histPrintFrame.style.display = 'none';
+            histPrintSpinner.style.display = 'flex';
+
+            histPrintFrame.onload = () => {
+                histPrintSpinner.style.display = 'none';
+                histPrintFrame.style.display = 'block';
+            };
+
+            histPrintFrame.src = `views/V_ticket_print.php?id=${histCurrentId}&format=${histCurrentFormat}`;
+        }
+
+        // Imprimir button
+        document.getElementById('histPrintBtn').addEventListener('click', () => {
+            if (histPrintFrame.contentWindow) {
+                histPrintFrame.contentWindow.focus();
+                histPrintFrame.contentWindow.print();
+            }
+        });
+
+        // Reset iframe when modal closes
+        document.getElementById('historialPrintModal').addEventListener('hidden.bs.modal', () => {
+            histPrintFrame.src = '';
+            histPrintFrame.style.display = 'none';
+            histPrintSpinner.style.display = 'flex';
         });
     });
 </script>

@@ -1,35 +1,24 @@
 <?php
 class Venta {
-    protected $id_venta;
-    protected $id_usuario;
-    protected $id_cliente;
-    protected $tipo_comprobante;
-    protected $fecha;
-    protected $total;
-    protected $estado;
-    
-    // Lista de objetos DetalleVenta
-    protected $detalles; 
+    public $id_venta;
+    public $id_usuario;
+    public $id_cliente;
+    public $tipo_comprobante;
+    public $total;
+    public $estado;
+    public $detalles = [];
 
-    public function __construct($id_usuario, $id_cliente, $tipo_comprobante, $total) {
-        $this->id_usuario = $id_usuario;
-        $this->id_cliente = $id_cliente;
+    public function __construct($id_usuario = null, $id_cliente = null, $tipo_comprobante = 1, $total = 0.0, $id_venta = null) {
+        $this->id_venta         = $id_venta;
+        $this->id_usuario       = $id_usuario;
+        $this->id_cliente       = $id_cliente;
         $this->tipo_comprobante = $tipo_comprobante;
-        $this->total = $total;
-        
-        $this->fecha = null; // MySQL le asignará el CURRENT_TIMESTAMP
-        $this->estado = 1;
-        $this->detalles = []; // Nace como un array vacío
+        $this->total            = $total;
+        $this->estado           = 1;
+        $this->detalles         = [];
     }
 
-    public function __get($propiedad) { 
-        if (property_exists($this, $propiedad)) return $this->$propiedad; return null; 
-    }
-    public function __set($propiedad, $valor) { 
-        if (property_exists($this, $propiedad)) $this->$propiedad = $valor; 
-    }
-
-    public function agregarDetalle(DetalleVenta $detalle) {
+    public function agregarDetalle($detalle) {
         $this->detalles[] = $detalle;
     }
 }

@@ -45,7 +45,11 @@ class M_Venta {
                 $jsonDetalles
             ]);
             
-            return true;
+            $stmtId = $this->conexion->prepare("SELECT id_venta FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1");
+            $stmtId->execute([$venta->id_usuario]);
+            $row = $stmtId->fetch();
+            return $row ? $row['id_venta'] : true;
+            
         } catch (PDOException $e) {
             return false;
         }
