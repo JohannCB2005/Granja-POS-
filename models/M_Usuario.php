@@ -45,7 +45,7 @@ class M_Usuario {
 
     public function listarUsuarios() {
         try {
-            $sql = "SELECT p.nombres_razon_social, p.apellidos, p.numero_documento, p.telefono, 
+            $sql = "SELECT p.tipo_documento, p.nombres_razon_social, p.apellidos, p.numero_documento, p.telefono, 
                         u.id_usuario, u.username, r.nombre AS rol, p.estado 
                     FROM usuarios u
                     INNER JOIN personas p ON u.id_persona = p.id_persona
@@ -82,10 +82,10 @@ class M_Usuario {
             $this->conexion->beginTransaction();
 
             // 1. Actualizar Persona
-            $sql = "UPDATE personas SET nombres_razon_social = ?, apellidos = ?, telefono = ?, direccion = ? 
+            $sql = "UPDATE personas SET tipo_documento = ?, numero_documento = ?, nombres_razon_social = ?, apellidos = ?, telefono = ?, direccion = ? 
                     WHERE id_persona = (SELECT id_persona FROM usuarios WHERE id_usuario = ?)";
             $stmt = $this->conexion->prepare($sql);
-            $stmt->execute([$usuario->nombres_razon_social, $usuario->apellidos, $usuario->telefono, $usuario->direccion, $usuario->id_usuario]);
+            $stmt->execute([$usuario->tipo_documento, $usuario->numero_documento, $usuario->nombres_razon_social, $usuario->apellidos, $usuario->telefono, $usuario->direccion, $usuario->id_usuario]);
 
             // 2. Actualizar Usuario (Rol y Username)
             $sql = "UPDATE usuarios SET id_rol = ?, username = ? WHERE id_usuario = ?";

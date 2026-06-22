@@ -331,106 +331,49 @@ $categorias = $modelCat->listar();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- Navigation Tabs -->
-                <ul class="nav nav-tabs border-bottom mb-4" id="clientTabs" role="tablist" style="font-size: 13.5px;">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-semibold text-success border-0 border-bottom border-3 border-success px-3 pb-2" id="datos-tab" data-bs-toggle="tab" data-bs-target="#tab-datos" type="button" role="tab" aria-controls="tab-datos" aria-selected="true" style="background: transparent;">Datos de Cliente</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-semibold text-muted border-0 px-3 pb-2" id="direccion-tab" data-bs-toggle="tab" data-bs-target="#tab-direccion" type="button" role="tab" aria-controls="tab-direccion" aria-selected="false" style="background: transparent;">Dirección</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-semibold text-muted border-0 px-3 pb-2" id="otros-tab" data-bs-toggle="tab" data-bs-target="#tab-otros" type="button" role="tab" aria-controls="tab-otros" aria-selected="false" style="background: transparent;">Otros Datos</button>
-                    </li>
-                </ul>
+                <!-- Hidden inputs to maintain compatibility and prevent JS/backend errors -->
+                <input type="hidden" id="modalNombreComercial" value="">
+                <input type="hidden" id="modalDiasCredito" value="0">
+                <input type="hidden" id="modalCodInterno" value="">
+                <input type="hidden" id="modalNacionalidad" value="PE">
+                <input type="hidden" id="modalCodBarra" value="">
+                <input type="hidden" id="modalDireccion" value="">
+                <input type="checkbox" id="modalAgenteRetencion" class="d-none">
 
-                <!-- Tab Content -->
-                <div class="tab-content" id="clientTabsContent" style="font-size: 13px;">
-                    <!-- TAB 1: DATOS DE CLIENTE -->
-                    <div class="tab-pane fade show active" id="tab-datos" role="tabpanel" aria-labelledby="datos-tab">
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Tipo Doc. Identidad <span class="text-danger">*</span></label>
-                                <select class="form-select" id="modalTipoDoc" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                                    <option value="1">DNI</option>
-                                    <option value="2">RUC</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Número <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <input type="text" class="form-control" id="modalNumDoc" placeholder="Ej. 78945612" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                                    <button type="button" class="btn btn-success fw-semibold d-flex align-items-center gap-1 px-3" id="modalSearchApiBtn" style="height: 38px; border: none; background-color: #198754;">
-                                        <i class="bi bi-search"></i> <span id="modalSearchApiBtnText">RENIEC</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Nombre / Razón Social <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="modalNombre" placeholder="Nombres o Razón Social" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Nombre comercial</label>
-                                <input type="text" class="form-control" id="modalNombreComercial" placeholder="Nombre comercial" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-muted fw-semibold mb-1">Días de crédito</label>
-                                <input type="number" class="form-control" id="modalDiasCredito" value="0" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-muted fw-semibold mb-1">Código interno</label>
-                                <input type="text" class="form-control" id="modalCodInterno" placeholder="Código interno" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <label class="form-label text-muted fw-semibold mb-1">Nacionalidad</label>
-                                <select class="form-select" id="modalNacionalidad" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                                    <option value="PE" selected>PERU</option>
-                                    <option value="OTHER">OTRO</option>
-                                </select>
-                            </div>
-
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Tipo de cliente</label>
-                                <select class="form-select" id="modalTipoCliente" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                                    <option value="1" selected>Natural</option>
-                                    <option value="2">Jurídica</option>
-                                </select>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Código de barra</label>
-                                <input type="text" class="form-control" id="modalCodBarra" placeholder="Código de barra" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="modalAgenteRetencion" style="box-shadow: none;">
-                                    <label class="form-check-label text-muted fw-semibold" for="modalAgenteRetencion">
-                                        ¿Es agente de retención?
-                                    </label>
-                                </div>
-                            </div>
+                <!-- Form fields -->
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Tipo Doc. Identidad <span class="text-danger">*</span></label>
+                        <select class="form-select" id="modalTipoDoc" style="box-shadow: none; height: 38px; font-size: 13.5px;">
+                            <option value="1">DNI</option>
+                            <option value="2">RUC</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Número <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="modalNumDoc" placeholder="Ej. 78945612" style="box-shadow: none; height: 38px; font-size: 13.5px;">
+                            <button type="button" class="btn btn-success fw-semibold d-flex align-items-center gap-1 px-3" id="modalSearchApiBtn" style="height: 38px; border: none; background-color: #198754;">
+                                <i class="bi bi-search"></i> <span id="modalSearchApiBtnText">RENIEC</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- TAB 2: DIRECCIÓN & TELÉFONO -->
-                    <div class="tab-pane fade" id="tab-direccion" role="tabpanel" aria-labelledby="direccion-tab">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label text-muted fw-semibold mb-1">Dirección</label>
-                                <input type="text" class="form-control" id="modalDireccion" placeholder="Dirección del cliente" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label class="form-label text-muted fw-semibold mb-1">Teléfono</label>
-                                <input type="text" class="form-control" id="modalTelefono" placeholder="Teléfono / Celular" style="box-shadow: none; height: 38px; font-size: 13.5px;">
-                            </div>
-                        </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted fw-semibold mb-1">Nombre / Razón Social <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="modalNombre" placeholder="Nombres o Razón Social" style="box-shadow: none; height: 38px; font-size: 13.5px;">
                     </div>
 
-                    <!-- TAB 3: OTROS DATOS -->
-                    <div class="tab-pane fade" id="tab-otros" role="tabpanel" aria-labelledby="otros-tab">
-                        <p class="text-muted mb-0">No se requieren campos adicionales obligatorios.</p>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Tipo de cliente</label>
+                        <select class="form-select" id="modalTipoCliente" style="box-shadow: none; height: 38px; font-size: 13.5px;">
+                            <option value="1" selected>Natural</option>
+                            <option value="2">Jurídica</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Teléfono</label>
+                        <input type="text" class="form-control" id="modalTelefono" placeholder="Teléfono / Celular" style="box-shadow: none; height: 38px; font-size: 13.5px;">
                     </div>
                 </div>
             </div>
@@ -532,11 +475,24 @@ $categorias = $modelCat->listar();
                 clientAutocompleteInput.value = '';
                 clearClientSelectionBtn.classList.add('d-none');
             }
+            updateInputConstraints();
             validateSubmitBtn();
+        }
+
+        function updateInputConstraints() {
+            if (!docTypeSelect || !clientAutocompleteInput) return;
+            const docType = docTypeSelect.value;
+            clientAutocompleteInput.removeAttribute('maxlength');
+            if (docType === '1' || docType === '3') {
+                clientAutocompleteInput.placeholder = "Ingrese DNI o Nombre...";
+            } else if (docType === '2') {
+                clientAutocompleteInput.placeholder = "Ingrese RUC o Razón Social...";
+            }
         }
 
         if (docTypeSelect) {
             docTypeSelect.addEventListener('change', updateDocumentMode);
+            updateInputConstraints();
         }
 
         // Autocomplete Filter & Render function
@@ -643,7 +599,28 @@ $categorias = $modelCat->listar();
         });
 
         // Trigger autocomplete on input or focus
-        clientAutocompleteInput.addEventListener('input', showAutocompleteDropdown);
+        clientAutocompleteInput.addEventListener('input', () => {
+            let val = clientAutocompleteInput.value;
+            const docType = docTypeSelect.value;
+            
+            // Check if there are any alphabetical characters to distinguish between name search and document number search
+            const hasLetters = /[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(val);
+            
+            if (!hasLetters) {
+                // Strip non-digits
+                val = val.replace(/\D/g, '');
+                const maxLen = (docType === '1' || docType === '3') ? 8 : 11;
+                if (val.length > maxLen) {
+                    val = val.substring(0, maxLen);
+                }
+                clientAutocompleteInput.value = val;
+            } else {
+                // Allow letters, spaces, accents, ñ, dots, commas, dashes, and ampersands
+                val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.,\-&]/g, '');
+                clientAutocompleteInput.value = val;
+            }
+            showAutocompleteDropdown();
+        });
         clientAutocompleteInput.addEventListener('focus', showAutocompleteDropdown);
 
         // Close dropdown on blur (with small delay so mousedown clicks register first)
@@ -653,7 +630,7 @@ $categorias = $modelCat->listar();
 
         // Open quick create modal pre-populating fields
         function openQuickCreateModal(typedVal) {
-            clientAutocompleteDropdown.classList.add('d-none');
+            hideAutocompleteDropdown();
             
             // Clean modal fields
             modalNombre.value = '';

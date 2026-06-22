@@ -124,59 +124,56 @@ $clientes = $modelCliente->listarClientes();
 <!-- Modal: Nuevo Cliente -->
 <div class="modal fade" id="nuevoClienteModal" tabindex="-1" aria-labelledby="nuevoClienteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header bg-success text-white border-0 py-3" style="border-radius: 15px 15px 0 0;">
-                <h6 class="modal-title fw-bold" id="nuevoClienteModalLabel">Nuevo Cliente</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header bg-light border-bottom py-3" style="border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title fw-bold text-dark" id="nuevoClienteModalLabel" style="font-size: 16px;">Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
-            <form id="formNuevoCliente">
-                <div class="modal-body p-4">
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label for="new_tipo_doc" class="form-label fw-semibold" style="font-size: 13px;">Tipo Documento</label>
-                            <select class="form-select" id="new_tipo_doc" required>
-                                <option value="1" selected>DNI</option>
-                                <option value="2">RUC</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label for="new_num_doc" class="form-label fw-semibold" style="font-size: 13px;">Número Documento</label>
-                            <input type="text" class="form-control" id="new_num_doc" placeholder="N° Documento" required autocomplete="off">
+            <div class="modal-body p-4" style="font-size: 13px;">
+                <!-- Hidden fields for compatibility -->
+                <input type="hidden" id="new_apellidos" value="">
+                <input type="hidden" id="new_direccion" value="">
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Tipo Doc. Identidad <span class="text-danger">*</span></label>
+                        <select class="form-select" id="new_tipo_doc" style="box-shadow: none; height: 38px; font-size: 13.5px;">
+                            <option value="1" selected>DNI</option>
+                            <option value="2">RUC</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Número <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="new_num_doc" placeholder="Ej. 78945612" style="box-shadow: none; height: 38px; font-size: 13.5px;" autocomplete="off">
+                            <button type="button" class="btn btn-success fw-semibold d-flex align-items-center gap-1 px-3" id="new_searchApiBtn" style="height: 38px; border: none; background-color: #198754;">
+                                <i class="bi bi-search"></i> <span id="new_searchApiBtnText">RENIEC</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label for="new_nombres" class="form-label fw-semibold" style="font-size: 13px;">Nombres / Razón Social</label>
-                            <input type="text" class="form-control" id="new_nombres" placeholder="Nombres o Razón Social" required autocomplete="off">
-                        </div>
-                        <div class="col-6">
-                            <label for="new_apellidos" class="form-label fw-semibold" style="font-size: 13px;">Apellidos (Opcional)</label>
-                            <input type="text" class="form-control" id="new_apellidos" placeholder="Apellidos" autocomplete="off">
-                        </div>
+
+                    <div class="col-12">
+                        <label class="form-label text-muted fw-semibold mb-1">Nombre / Razón Social <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="new_nombres" placeholder="Nombres o Razón Social" style="box-shadow: none; height: 38px; font-size: 13.5px;" autocomplete="off">
                     </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <label for="new_telefono" class="form-label fw-semibold" style="font-size: 13px;">Teléfono</label>
-                            <input type="text" class="form-control" id="new_telefono" placeholder="Ej. 987654321" autocomplete="off">
-                        </div>
-                        <div class="col-6">
-                            <label for="new_tipo_cli" class="form-label fw-semibold" style="font-size: 13px;">Tipo Cliente</label>
-                            <select class="form-select" id="new_tipo_cli" required>
-                                <option value="1" selected>Persona Natural</option>
-                                <option value="2">Persona Jurídica</option>
-                            </select>
-                        </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Tipo de cliente</label>
+                        <select class="form-select" id="new_tipo_cli" style="box-shadow: none; height: 38px; font-size: 13.5px;">
+                            <option value="1" selected>Natural</option>
+                            <option value="2">Jurídica</option>
+                        </select>
                     </div>
-                    <div>
-                        <label for="new_direccion" class="form-label fw-semibold" style="font-size: 13px;">Dirección</label>
-                        <input type="text" class="form-control" id="new_direccion" placeholder="Dirección del cliente" autocomplete="off">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Teléfono</label>
+                        <input type="text" class="form-control" id="new_telefono" placeholder="Teléfono / Celular" style="box-shadow: none; height: 38px; font-size: 13.5px;" autocomplete="off">
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light fw-semibold" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
-                    <button type="submit" class="gp-btn-primary border-0">Crear registro</button>
-                </div>
-            </form>
+            </div>
+            <div class="modal-footer border-top bg-light py-3" style="border-radius: 0 0 12px 12px;">
+                <button type="button" class="btn btn-light fw-semibold px-4" data-bs-dismiss="modal" style="font-size: 13.5px; height: 38px;">Cancelar</button>
+                <button type="button" class="btn btn-success fw-semibold px-4" id="new_saveClientBtn" style="font-size: 13.5px; height: 38px; background-color: #198754; border: none;">Guardar</button>
+            </div>
         </div>
     </div>
 </div>
@@ -263,48 +260,122 @@ $clientes = $modelCliente->listarClientes();
             });
         }
 
-        // Add Cliente Submit
-        const formNuevo = document.getElementById('formNuevoCliente');
-        if (formNuevo) {
-            formNuevo.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const tipo_documento = document.getElementById('new_tipo_doc').value;
-                const numero_documento = document.getElementById('new_num_doc').value.trim();
-                const nombres_razon_social = document.getElementById('new_nombres').value.trim();
-                const apellidos = document.getElementById('new_apellidos').value.trim();
-                const telefono = document.getElementById('new_telefono').value.trim();
-                const tipo_cliente = document.getElementById('new_tipo_cli').value;
-                const direccion = document.getElementById('new_direccion').value.trim();
+        // --- RENIEC/SUNAT API lookup for new client ---
+        const new_tipoDoc     = document.getElementById('new_tipo_doc');
+        const new_numDoc      = document.getElementById('new_num_doc');
+        const new_searchBtn   = document.getElementById('new_searchApiBtn');
+        const new_searchTxt   = document.getElementById('new_searchApiBtnText');
+        const new_nombres     = document.getElementById('new_nombres');
+        const new_tipoCli     = document.getElementById('new_tipo_cli');
+        const new_direccion   = document.getElementById('new_direccion');
+        const new_saveBtn     = document.getElementById('new_saveClientBtn');
 
-                try {
-                    const response = await fetch('./controllers/C_Cliente.php?action=crear', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ tipo_documento, numero_documento, nombres_razon_social, apellidos, telefono, tipo_cliente, direccion })
-                    });
-                    const data = await response.json();
+        // Update RENIEC/SUNAT button label when tipo doc changes
+        new_tipoDoc.addEventListener('change', () => {
+            new_searchTxt.innerText = new_tipoDoc.value === '1' ? 'RENIEC' : 'SUNAT';
+            new_numDoc.value = '';
+            new_nombres.value = '';
+        });
 
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Creado!',
-                            text: data.mensaje,
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => window.location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.mensaje,
-                            confirmButtonColor: '#15803d'
-                        });
-                    }
-                } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo conectar al servidor.' });
+        // API Search
+        new_searchBtn.addEventListener('click', async () => {
+            const docNum  = new_numDoc.value.trim();
+            const docType = new_tipoDoc.value;
+
+            if (!docNum) {
+                Swal.fire({ icon:'warning', title:'Número requerido', text:'Ingrese el número de documento.', confirmButtonColor:'#15803d' });
+                return;
+            }
+            if (docType === '1' && docNum.length !== 8) {
+                Swal.fire({ icon:'warning', title:'DNI inválido', text:'El DNI debe tener exactamente 8 dígitos.', confirmButtonColor:'#15803d' });
+                return;
+            }
+            if (docType === '2' && docNum.length !== 11) {
+                Swal.fire({ icon:'warning', title:'RUC inválido', text:'El RUC debe tener exactamente 11 dígitos.', confirmButtonColor:'#15803d' });
+                return;
+            }
+
+            new_searchBtn.disabled = true;
+            const orig = new_searchTxt.innerText;
+            new_searchTxt.innerText = 'Buscando...';
+
+            try {
+                const res  = await fetch('./controllers/C_Cliente.php?action=buscar_api_only', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero_documento: docNum })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    new_nombres.value   = data.data.nombre  || '';
+                    new_direccion.value = data.data.direccion || '';
+                    new_tipoCli.value   = data.data.tipo_cliente || '1';
+                    Swal.fire({ icon:'success', title:'¡Datos obtenidos!', text:'Se cargaron los datos automáticamente.', showConfirmButton:false, timer:1400 });
+                } else {
+                    Swal.fire({ icon:'error', title:'No encontrado', text: data.mensaje, confirmButtonColor:'#15803d' });
                 }
-            });
-        }
+            } catch (err) {
+                Swal.fire({ icon:'error', title:'Error de red', text:'No se pudo conectar al servidor.', confirmButtonColor:'#15803d' });
+            } finally {
+                new_searchBtn.disabled = false;
+                new_searchTxt.innerText = orig;
+            }
+        });
+
+        // Only allow digits in doc number field
+        new_numDoc.addEventListener('input', () => {
+            new_numDoc.value = new_numDoc.value.replace(/\D/g, '');
+        });
+
+        // Save new client
+        new_saveBtn.addEventListener('click', async () => {
+            const tipo_documento       = new_tipoDoc.value;
+            const numero_documento     = new_numDoc.value.trim();
+            const nombres_razon_social = new_nombres.value.trim();
+            const apellidos            = document.getElementById('new_apellidos').value.trim();
+            const telefono             = document.getElementById('new_telefono').value.trim();
+            const tipo_cliente         = new_tipoCli.value;
+            const direccion            = new_direccion.value.trim();
+
+            if (!numero_documento || !nombres_razon_social) {
+                Swal.fire({ icon:'warning', title:'Campos obligatorios', text:'El número de documento y el nombre son requeridos.', confirmButtonColor:'#15803d' });
+                return;
+            }
+
+            new_saveBtn.disabled = true;
+            try {
+                const response = await fetch('./controllers/C_Cliente.php?action=crear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipo_documento, numero_documento, nombres_razon_social, apellidos, telefono, tipo_cliente, direccion })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({ icon:'success', title:'¡Creado!', text: data.mensaje, showConfirmButton:false, timer:1500 })
+                        .then(() => window.location.reload());
+                } else {
+                    Swal.fire({ icon:'error', title:'Error', text: data.mensaje, confirmButtonColor:'#15803d' });
+                }
+            } catch (error) {
+                Swal.fire({ icon:'error', title:'Error', text:'No se pudo conectar al servidor.' });
+            } finally {
+                new_saveBtn.disabled = false;
+            }
+        });
+
+        // Reset fields when modal is closed
+        document.getElementById('nuevoClienteModal').addEventListener('hidden.bs.modal', () => {
+            new_numDoc.value    = '';
+            new_nombres.value   = '';
+            new_direccion.value = '';
+            new_tipoCli.value   = '1';
+            new_tipoDoc.value   = '1';
+            new_searchTxt.innerText = 'RENIEC';
+            document.getElementById('new_apellidos').value = '';
+            document.getElementById('new_telefono').value  = '';
+        });
 
         // Edit button click handler
         const editModal = new bootstrap.Modal(document.getElementById('editarClienteModal'));

@@ -4,8 +4,8 @@ $rol = $_SESSION['rol'];
 ?>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <div class="sidebar-brand-icon">
-            <i class="bi bi-sprout-fill"></i>
+        <div class="sidebar-brand-icon" style="background: transparent; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
+            <img src="assets/logo_unp.png" alt="UNP" style="max-width: 100%; max-height: 100%; object-fit: contain;">
         </div>
         <div class="brand-text">
             <h6 class="mb-0 fw-bold">Granja POS</h6>
@@ -34,6 +34,12 @@ $rol = $_SESSION['rol'];
             <i class="bi bi-box-seam-fill"></i>
             <span>Insumos</span>
         </a>
+        <?php if ($rol === 'Administrador'): ?>
+            <a href="index.php?modulo=kardex" class="menu-item <?php echo $moduloActual === 'kardex' ? 'active' : ''; ?>">
+                <i class="bi bi-journal-bookmark-fill"></i>
+                <span>Kardex</span>
+            </a>
+        <?php endif; ?>
 
         <!-- Administración Group -->
         <div class="menu-header">Administración</div>

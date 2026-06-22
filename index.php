@@ -18,6 +18,7 @@ $routes = [
     'dashboard' => ['Administrador'],
     'categorias' => ['Administrador'],
     'insumos' => ['Administrador', 'Vendedor'],
+    'kardex' => ['Administrador'],
     'usuarios' => ['Administrador'],
     'clientes' => ['Administrador', 'Vendedor'],
     'nueva-venta' => ['Administrador', 'Vendedor'],
@@ -41,6 +42,7 @@ $titles = [
     'dashboard' => 'Dashboard - Granja POS',
     'categorias' => 'Categorías - Granja POS',
     'insumos' => 'Insumos - Granja POS',
+    'kardex' => 'Kardex - Granja POS',
     'usuarios' => 'Usuarios - Granja POS',
     'clientes' => 'Clientes - Granja POS',
     'nueva-venta' => 'Nueva Venta - Granja POS',
@@ -64,6 +66,9 @@ switch ($modulo) {
         break;
     case 'insumos':
         require_once 'views/V_insumos.php';
+        break;
+    case 'kardex':
+        require_once 'views/V_kardex.php';
         break;
     case 'usuarios':
         require_once 'views/V_usuarios.php';
