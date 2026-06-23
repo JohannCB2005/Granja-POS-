@@ -305,8 +305,8 @@ p { margin: 1px 0; }
         <tr>
             <td><?php echo str_pad($i+1, 2, '0', STR_PAD_LEFT); ?></td>
             <td><?php echo number_format($d['cantidad'], 2); ?></td>
-            <td><?php echo htmlspecialchars($d['unidad']); ?></td>
-            <td><?php echo htmlspecialchars($d['insumo']); ?></td>
+            <td><?php echo htmlspecialchars($d['abreviatura']); ?></td>
+            <td><?php echo htmlspecialchars($d['insumo_nombre']); ?></td>
             <td class="r"><?php echo number_format($d['precio_venta'], 2); ?></td>
             <td class="r"><?php echo number_format($d['subtotal'], 2); ?></td>
         </tr>
@@ -382,8 +382,8 @@ p { margin: 1px 0; }
         <tr>
             <td><?php echo str_pad($i+1, 2, '0', STR_PAD_LEFT); ?></td>
             <td><?php echo number_format($d['cantidad'], 2); ?></td>
-            <td><?php echo htmlspecialchars($d['unidad']); ?></td>
-            <td><?php echo htmlspecialchars($d['insumo']); ?></td>
+            <td><?php echo htmlspecialchars($d['abreviatura']); ?></td>
+            <td><?php echo htmlspecialchars($d['insumo_nombre']); ?></td>
             <td class="r"><?php echo number_format($d['precio_venta'], 2); ?></td>
             <td class="r"><?php echo number_format($d['subtotal'], 2); ?></td>
         </tr>

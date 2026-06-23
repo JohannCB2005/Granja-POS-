@@ -93,7 +93,7 @@ class M_Venta {
     public function obtenerDetallesPorVenta($id_venta) {
         try {
             $sql = "SELECT dv.cantidad, dv.precio_venta, dv.subtotal, 
-                    i.nombre AS insumo, um.abreviatura AS unidad
+                    i.nombre AS insumo_nombre, um.abreviatura
                     FROM detalle_ventas dv
                     INNER JOIN insumos i ON dv.id_insumo = i.id_insumo
                     INNER JOIN unidades_medida um ON i.id_unidad = um.id_unidad
