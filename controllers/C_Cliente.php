@@ -240,7 +240,8 @@ switch ($action) {
         // 4. Automatically insert the new client into DB
         $cliente = new Cliente($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, '', $tipo_cliente);
         
-        if ($model->registrarCliente($cliente)) {
+        $resultado = $model->registrarCliente($cliente);
+        if ($resultado === true) {
             $nuevoCliente = $model->obtenerClientePorDocumento($numero_documento);
             echo json_encode([
                 "success" => true,
@@ -248,10 +249,13 @@ switch ($action) {
                 "cliente" => $nuevoCliente
             ]);
         } else {
-            echo json_encode([
-                "success" => false,
-                "mensaje" => "Se obtuvieron los datos pero no se pudo registrar al cliente en la base de datos local."
-            ]);
+            $errorMsg = "Se obtuvieron los datos pero no se pudo registrar al cliente en la base de datos local.";
+            if (is_string($resultado) && stripos($resultado, 'Duplicate entry') !== false) {
+                $errorMsg = "El número de documento '$numero_documento' ya se encuentra registrado.";
+            } elseif (is_string($resultado)) {
+                $errorMsg = $resultado;
+            }
+            echo json_encode(["success" => false, "mensaje" => $errorMsg]);
         }
         break;
 
@@ -271,7 +275,8 @@ switch ($action) {
 
         $cliente = new Cliente($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, $telefono, $tipo_cliente);
         
-        if ($model->registrarCliente($cliente)) {
+        $resultado = $model->registrarCliente($cliente);
+        if ($resultado === true) {
             $nuevoCliente = $model->obtenerClientePorDocumento($numero_documento);
             echo json_encode([
                 "success" => true, 
@@ -279,7 +284,14 @@ switch ($action) {
                 "cliente" => $nuevoCliente
             ]);
         } else {
-            echo json_encode(["success" => false, "mensaje" => "Error al registrar el cliente."]);
+            // $resultado contains the DB error message string
+            $errorMsg = "Error al registrar el cliente.";
+            if (is_string($resultado) && stripos($resultado, 'Duplicate entry') !== false) {
+                $errorMsg = "El número de documento '$numero_documento' ya se encuentra registrado. Si el cliente existe, búsquelo por su documento.";
+            } elseif (is_string($resultado)) {
+                $errorMsg = $resultado;
+            }
+            echo json_encode(["success" => false, "mensaje" => $errorMsg]);
         }
         break;
 

@@ -176,7 +176,7 @@ CREATE PROCEDURE sp_registrar_cliente(
     IN p_direccion VARCHAR(255), IN p_telefono VARCHAR(15), IN p_tipo_cliente TINYINT
 )
 BEGIN
-    DECLARE v_id_persona INT;
+    DECLARE v_id_persona INT DEFAULT NULL;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -184,13 +184,31 @@ BEGIN
     END;
 
     START TRANSACTION;
-    INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
-    VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
-    
-    SET v_id_persona = LAST_INSERT_ID();
 
+    -- Check if a persona with this document number already exists
+    SELECT id_persona INTO v_id_persona FROM personas WHERE numero_documento = p_numero_documento LIMIT 1;
+
+    IF v_id_persona IS NULL THEN
+        -- Persona does not exist: insert into personas first
+        INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
+        VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
+        SET v_id_persona = LAST_INSERT_ID();
+    ELSE
+        -- Persona exists but may have been soft-deleted: restore and update their data
+        UPDATE personas SET
+            tipo_documento       = p_tipo_documento,
+            nombres_razon_social = p_nombres_razon_social,
+            apellidos            = p_apellidos,
+            direccion            = p_direccion,
+            telefono             = p_telefono,
+            estado               = 1
+        WHERE id_persona = v_id_persona;
+    END IF;
+
+    -- Insert into clientes (will fail with FK/UNIQUE if already a client, which is correct)
     INSERT INTO clientes (id_persona, tipo_cliente)
     VALUES (v_id_persona, p_tipo_cliente);
+
     COMMIT;
 END$$
 

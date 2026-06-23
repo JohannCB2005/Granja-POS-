@@ -35,7 +35,8 @@ class M_Cliente {
             
             return true;
         } catch (PDOException $e) {
-            return false;
+            // Return error string so controller can pass it to the frontend
+            return $e->getMessage();
         }
     }
 
