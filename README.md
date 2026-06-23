@@ -10,7 +10,7 @@ Este repositorio contiene el código fuente para el Sistema de Punto de Venta (P
 * **El Problema en la UNP:** Actualmente, la gestión de insumos y ventas de la Granja de Zootecnia se realiza de forma manual, lo que genera descuadres de inventario y lentitud en los reportes.
 * **Justificación:** Este sistema web digitaliza el proceso mediante una interfaz interactiva y segura, resolviendo el problema de gestión real.
 
-## 2. Módulos del Sistema (Alcance Total)
+2. **Módulos del Sistema (Alcance Total)**
 El sistema se compone de los siguientes 6 módulos funcionales:
 
 1. **Módulo de Autenticación (Login & Sesiones):**
@@ -25,10 +25,12 @@ El sistema se compone de los siguientes 6 módulos funcionales:
    * Asignación de roles y control de acceso.
 4. **Módulo de Clientes:**
    * Registro y edición de compradores (CRUD con Borrado Lógico).
+   * Integración con consulta/búsqueda rápida y registro inteligente.
 5. **Módulo de Ventas (Transaccional - CRÍTICO):**
    * Interfaz POS interactiva (Búsqueda de insumos y Carrito temporal en JS/PHP).
    * Generación de la Venta (facturación).
    * Historial de ventas y anulación de boletas.
+   * **Impresión de Comprobante:** Previsualización y descarga en múltiples formatos (Ticket térmico 80mm, Ticket térmico 58mm y formato A4 estándar) integrado tras registrar una venta y en el historial.
 6. **Módulo de Reportes (Alta Nota):**
    * Dashboard con gráficos (Chart.js o similar) consumiendo datos vía AJAX/JSON.
    * Reporte tabular exportable a PDF (usando librerías como FPDF o Dompdf).
@@ -119,9 +121,9 @@ Para mantener un código limpio, aplicaremos el estándar PSR.
 
 ### 6.2. Clases y Archivos PHP (`PascalCase`)
 El nombre del archivo debe ser exactamente igual al nombre de la clase.
-* **Entidades:** `Insumo.php`, `Usuario.php`.
-* **DAOs:** `InsumoDAO.php`, `UsuarioDAO.php`.
-* **Controladores:** `VentaController.php`, `ClienteController.php`.
+* **Entidades:** `Insumo.php`, `Usuario.php`, `Cliente.php`.
+* **Modelos (DAOs):** Prefijo `M_` (`M_Insumo.php`, `M_Cliente.php`).
+* **Controladores:** Prefijo `C_` (`C_Insumo.php`, `C_Cliente.php`).
 
 ### 6.3. Variables y Propiedades (`camelCase`)
 * **Correcto:** `$precioUnitario`, `$listaInsumos`, `$idVenta`.
