@@ -62,7 +62,7 @@ class M_Usuario {
     public function listarUsuarios() {
         try {
             $sql = "SELECT p.tipo_documento, p.nombres_razon_social, p.apellidos, p.numero_documento, p.telefono, 
-                        u.id_usuario, u.username, r.nombre AS rol, p.estado 
+                        u.id_usuario, u.id_rol, u.username, r.nombre AS rol, p.estado 
                     FROM usuarios u
                     INNER JOIN personas p ON u.id_persona = p.id_persona
                     INNER JOIN roles r ON u.id_rol = r.id_rol
