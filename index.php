@@ -1,4 +1,9 @@
 <?php
+// Cabeceras de seguridad HTTP
+header('X-Frame-Options: DENY');           // Anti-clickjacking
+header('X-Content-Type-Options: nosniff'); // Anti-MIME sniffing
+header('Referrer-Policy: strict-origin');  // Control de referrer
+
 session_start();
 
 // 1. Auth check
@@ -17,13 +22,15 @@ $modulo = isset($_GET['modulo']) ? $_GET['modulo'] : $defaultModule;
 $routes = [
     'dashboard' => ['Administrador'],
     'categorias' => ['Administrador'],
-    'insumos' => ['Administrador', 'Vendedor'],
+    'insumos' => ['Administrador'],
     'kardex' => ['Administrador'],
     'usuarios' => ['Administrador'],
     'clientes' => ['Administrador', 'Vendedor'],
     'nueva-venta' => ['Administrador', 'Vendedor'],
     'historial' => ['Administrador', 'Vendedor'],
-    'reportes' => ['Administrador']
+    'reportes' => ['Administrador'],
+    'caja' => ['Administrador', 'Vendedor'],
+    'control-cajas' => ['Administrador']
 ];
 
 // 4. Validate route exists and is allowed for the user's role
@@ -47,7 +54,9 @@ $titles = [
     'clientes' => 'Clientes - Granja POS',
     'nueva-venta' => 'Nueva Venta - Granja POS',
     'historial' => 'Historial de Ventas - Granja POS',
-    'reportes' => 'Reportes - Granja POS'
+    'reportes' => 'Reportes - Granja POS',
+    'caja' => 'Mi Caja - Granja POS',
+    'control-cajas' => 'Control de Cajas - Granja POS'
 ];
 $title = isset($titles[$modulo]) ? $titles[$modulo] : 'Granja POS';
 
@@ -84,6 +93,12 @@ switch ($modulo) {
         break;
     case 'reportes':
         require_once 'views/V_reportes.php';
+        break;
+    case 'caja':
+        require_once 'views/V_caja.php';
+        break;
+    case 'control-cajas':
+        require_once 'views/V_control_cajas.php';
         break;
 }
 echo '</main>';

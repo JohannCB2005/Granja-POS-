@@ -121,7 +121,7 @@ class M_Usuario {
                     FROM usuarios u 
                     INNER JOIN personas p ON u.id_persona = p.id_persona 
                     INNER JOIN roles r ON u.id_rol = r.id_rol 
-                    WHERE u.username = ?";
+                    WHERE u.username = ? AND p.estado = 1";
             
             $stmt = $this->conexion->prepare($sql);
             $stmt->bindParam(1, $username);

@@ -1,3 +1,11 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -260,6 +268,7 @@
             <button type="submit" class="btn-login" id="loginBtn">
                 Iniciar Sesión
             </button>
+            <input type="hidden" id="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
         </form>
 
         <div class="login-footer">
@@ -288,6 +297,7 @@
 
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
+        const csrf_token = document.getElementById('csrf_token').value;
         const btn      = document.getElementById('loginBtn');
 
         if (!username || !password) {
@@ -307,7 +317,7 @@
             const response = await fetch('controllers/C_Login.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, csrf_token })
             });
 
             const data = await response.json();

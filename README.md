@@ -37,7 +37,7 @@ El sistema se compone de los siguientes 6 módulos funcionales:
 
 **Roles de Usuario:**
   * `Administrador`: Acceso total (Gestión de usuarios, inventario completo y reportes)[cite: 4].
-  * `Vendedor`: Acceso limitado (Registro de clientes y realización de ventas)[cite: 4].
+  * `Vendedor`: Acceso limitado (Apertura/cierre de caja, consulta de stock, registro de clientes y realización de ventas).[cite: 4].
 
 ## 3. Stack Tecnológico
 * **Frontend (Cliente Ligero):** HTML5, CSS3, JavaScript (DOM/AJAX), Bootstrap 5.

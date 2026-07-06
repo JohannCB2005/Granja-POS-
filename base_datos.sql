@@ -290,5 +290,24 @@ BEGIN
     CLOSE cur;
     COMMIT;
 END$$
-
 DELIMITER ;
+
+-- ==========================================
+-- 6. TABLA DE CAJAS
+-- ==========================================
+
+CREATE TABLE cajas (
+  id_caja       INT(11) NOT NULL AUTO_INCREMENT,
+  id_usuario    INT(11) NOT NULL,
+  monto_apertura DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  monto_cierre   DECIMAL(10,2) DEFAULT NULL,
+  fecha_cierre   DATETIME DEFAULT NULL,
+  total_ventas   DECIMAL(10,2) DEFAULT NULL,     -- calculado al cerrar
+  num_ventas     INT(11) DEFAULT NULL,            -- calculado al cerrar
+  diferencia     DECIMAL(10,2) DEFAULT NULL,      -- sobrante(+) / faltante(-)
+  observaciones  TEXT DEFAULT NULL,               -- nota opcional al cerrar
+  estado         TINYINT(1) NOT NULL DEFAULT 1,   -- 1=Abierta, 0=Cerrada
+  PRIMARY KEY (id_caja),
+  FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

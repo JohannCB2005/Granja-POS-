@@ -40,6 +40,12 @@ switch ($action) {
             exit;
         }
 
+        // Validate Password Strength
+        if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password)) {
+            echo json_encode(["success" => false, "mensaje" => "La contraseña debe tener al menos 8 caracteres, incluir 1 mayúscula, 1 número y 1 carácter especial."]);
+            exit;
+        }
+
         // Hash the password securely
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
@@ -75,6 +81,10 @@ switch ($action) {
             // Optional: If password is provided, we can update it separately. Let's add password update if not empty!
             $password = isset($input['password']) ? trim($input['password']) : '';
             if (!empty($password)) {
+                if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password)) {
+                    echo json_encode(["success" => false, "mensaje" => "Usuario actualizado correctamente, pero la contraseña no se cambió: debe tener al menos 8 caracteres, 1 mayúscula, 1 número y 1 símbolo."]);
+                    exit;
+                }
                 try {
                     $dbh = Conexion::singleton()->getConexion();
                     $stmt = $dbh->prepare("UPDATE usuarios SET password = ? WHERE id_usuario = ?");

@@ -23,18 +23,16 @@ $rol = $_SESSION['rol'];
         <?php endif; ?>
 
         <!-- Inventario Group -->
-        <div class="menu-header">Inventario</div>
         <?php if ($rol === 'Administrador'): ?>
+            <div class="menu-header">Inventario</div>
             <a href="index.php?modulo=categorias" class="menu-item <?php echo $moduloActual === 'categorias' ? 'active' : ''; ?>">
                 <i class="bi bi-tags-fill"></i>
                 <span>Categorías</span>
             </a>
-        <?php endif; ?>
-        <a href="index.php?modulo=insumos" class="menu-item <?php echo $moduloActual === 'insumos' ? 'active' : ''; ?>">
-            <i class="bi bi-box-seam-fill"></i>
-            <span>Insumos</span>
-        </a>
-        <?php if ($rol === 'Administrador'): ?>
+            <a href="index.php?modulo=insumos" class="menu-item <?php echo $moduloActual === 'insumos' ? 'active' : ''; ?>">
+                <i class="bi bi-box-seam-fill"></i>
+                <span>Insumos</span>
+            </a>
             <a href="index.php?modulo=kardex" class="menu-item <?php echo $moduloActual === 'kardex' ? 'active' : ''; ?>">
                 <i class="bi bi-journal-bookmark-fill"></i>
                 <span>Kardex</span>
@@ -55,7 +53,11 @@ $rol = $_SESSION['rol'];
         </a>
 
         <!-- Ventas Group -->
-        <div class="menu-header">Ventas</div>
+        <div class="menu-header">Ventas & Caja</div>
+        <a href="index.php?modulo=caja" class="menu-item <?php echo $moduloActual === 'caja' ? 'active' : ''; ?>">
+            <i class="bi bi-cash-coin"></i>
+            <span>Mi Caja</span>
+        </a>
         <a href="index.php?modulo=nueva-venta" class="menu-item <?php echo $moduloActual === 'nueva-venta' ? 'active' : ''; ?>">
             <i class="bi bi-cart-fill"></i>
             <span>Nueva Venta</span>
@@ -67,7 +69,11 @@ $rol = $_SESSION['rol'];
 
         <!-- Análisis Group -->
         <?php if ($rol === 'Administrador'): ?>
-            <div class="menu-header">Análisis</div>
+            <div class="menu-header">Análisis & Control</div>
+            <a href="index.php?modulo=control-cajas" class="menu-item <?php echo $moduloActual === 'control-cajas' ? 'active' : ''; ?>">
+                <i class="bi bi-safe-fill"></i>
+                <span>Control de Cajas</span>
+            </a>
             <a href="index.php?modulo=reportes" class="menu-item <?php echo $moduloActual === 'reportes' ? 'active' : ''; ?>">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Reportes</span>

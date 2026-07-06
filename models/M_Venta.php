@@ -69,7 +69,7 @@ class M_Venta {
     }
 
     // 3. Listar Ventas (Historial general con cruce de datos)
-    public function listar() {
+    public function listar($id_usuario = null) {
         try {
             $sql = "SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.estado,
                            u.username AS vendedor, 
@@ -77,11 +77,20 @@ class M_Venta {
                     FROM ventas v
                     INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
                     INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-                    INNER JOIN personas p ON c.id_persona = p.id_persona
-                    ORDER BY v.fecha DESC";
+                    INNER JOIN personas p ON c.id_persona = p.id_persona";
+            
+            if ($id_usuario !== null) {
+                $sql .= " WHERE v.id_usuario = ?";
+            }
+            
+            $sql .= " ORDER BY v.fecha DESC";
             
             $stmt = $this->conexion->prepare($sql);
-            $stmt->execute();
+            if ($id_usuario !== null) {
+                $stmt->execute([$id_usuario]);
+            } else {
+                $stmt->execute();
+            }
             
             return $stmt->fetchAll();
         } catch (PDOException $e) {

@@ -15,7 +15,8 @@ $format   = isset($_GET['format']) ? $_GET['format'] : '80mm'; // 80mm | 58mm | 
 if ($id_venta <= 0) { die('ID de venta inválido.'); }
 
 $model  = M_Venta::singleton();
-$ventas = $model->listar();
+$id_vendedor = ($_SESSION['rol'] !== 'Administrador') ? $_SESSION['id_usuario'] : null;
+$ventas = $model->listar($id_vendedor);
 $venta  = null;
 foreach ($ventas as $v) {
     if ($v['id_venta'] == $id_venta) { $venta = $v; break; }

@@ -6,7 +6,8 @@ if (!isset($_SESSION['id_usuario'])) {
 
 require_once dirname(__DIR__) . '/models/M_Venta.php';
 $modelVenta = M_Venta::singleton();
-$ventas = $modelVenta->listar();
+$id_vendedor = ($_SESSION['rol'] !== 'Administrador') ? $_SESSION['id_usuario'] : null;
+$ventas = $modelVenta->listar($id_vendedor);
 ?>
 
 <div class="container-fluid px-0">

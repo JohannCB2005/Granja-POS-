@@ -180,6 +180,10 @@ $roles = $modelRol->listar();
                         <div class="col-6">
                             <label for="new_password" class="form-label fw-semibold" style="font-size: 13px;">Contraseña</label>
                             <input type="password" class="form-control" id="new_password" placeholder="Contraseña" required>
+                            <div class="progress mt-2" style="height: 5px;">
+                                <div id="pass_strength_bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small id="pass_strength_text" class="text-muted" style="font-size: 11px; font-weight: 500;">Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo</small>
                         </div>
                     </div>
                     <div>
@@ -252,6 +256,10 @@ $roles = $modelRol->listar();
                         <div class="col-6">
                             <label for="edit_password" class="form-label fw-semibold" style="font-size: 13px;">Nueva Contraseña (Opcional)</label>
                             <input type="password" class="form-control" id="edit_password" placeholder="Solo si desea cambiarla">
+                            <div class="progress mt-2" style="height: 5px; display: none;" id="edit_progress_container">
+                                <div id="edit_pass_strength_bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small id="edit_pass_strength_text" class="text-muted" style="font-size: 11px; font-weight: 500;"></small>
                         </div>
                     </div>
                     <div>
@@ -271,6 +279,69 @@ $roles = $modelRol->listar();
 <!-- JavaScript for CRUD Operations -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Password Strength Evaluator
+        function evaluatePassword(pass) {
+            let strength = 0;
+            if (pass.length >= 8) strength += 25;
+            if (pass.match(/[A-Z]/)) strength += 25;
+            if (pass.match(/[0-9]/)) strength += 25;
+            if (pass.match(/[\W_]/)) strength += 25;
+            return strength;
+        }
+
+        function updateStrengthUI(input, bar, textEl, container = null) {
+            const pass = input.value;
+            if (container && pass.length === 0) {
+                container.style.display = 'none';
+                textEl.innerText = '';
+                return;
+            }
+            if (container) container.style.display = 'flex';
+            
+            const score = evaluatePassword(pass);
+            bar.style.width = score + '%';
+            
+            if (pass.length === 0) {
+                bar.className = 'progress-bar bg-danger';
+                textEl.innerText = 'Mínimo 8 caracteres, 1 mayúscula, 1 número y 1 símbolo';
+                textEl.className = 'text-muted';
+                return;
+            }
+            
+            if (score <= 25) {
+                bar.className = 'progress-bar bg-danger';
+                textEl.innerText = 'Débil';
+                textEl.className = 'text-danger';
+            } else if (score <= 50) {
+                bar.className = 'progress-bar bg-warning';
+                textEl.innerText = 'Regular (Faltan requisitos)';
+                textEl.className = 'text-warning';
+            } else if (score <= 75) {
+                bar.className = 'progress-bar bg-info';
+                textEl.innerText = 'Buena';
+                textEl.className = 'text-info';
+            } else {
+                bar.className = 'progress-bar bg-success';
+                textEl.innerText = 'Fuerte y Segura';
+                textEl.className = 'text-success';
+            }
+        }
+
+        const newPassInput = document.getElementById('new_password');
+        const newPassBar = document.getElementById('pass_strength_bar');
+        const newPassText = document.getElementById('pass_strength_text');
+        if (newPassInput) {
+            newPassInput.addEventListener('input', () => updateStrengthUI(newPassInput, newPassBar, newPassText));
+        }
+
+        const editPassInput = document.getElementById('edit_password');
+        const editPassBar = document.getElementById('edit_pass_strength_bar');
+        const editPassText = document.getElementById('edit_pass_strength_text');
+        const editProgressContainer = document.getElementById('edit_progress_container');
+        if (editPassInput) {
+            editPassInput.addEventListener('input', () => updateStrengthUI(editPassInput, editPassBar, editPassText, editProgressContainer));
+        }
+
         // Search functionality
         const searchInput = document.getElementById('searchUsuarios');
         const rows = document.querySelectorAll('.usuario-row');

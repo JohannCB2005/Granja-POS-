@@ -1,5 +1,5 @@
 <?php
-if (!isset($_SESSION['id_usuario'])) {
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }

@@ -10,6 +10,7 @@ if (!isset($_SESSION['id_usuario'])) {
 require_once dirname(__DIR__) . '/entities/Venta.php';
 require_once dirname(__DIR__) . '/entities/DetalleVenta.php';
 require_once dirname(__DIR__) . '/models/M_Venta.php';
+require_once dirname(__DIR__) . '/models/M_Caja.php';
 
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
@@ -22,7 +23,8 @@ $model = M_Venta::singleton();
 
 switch ($action) {
     case 'listar':
-        echo json_encode($model->listar());
+        $id_vendedor = ($_SESSION['rol'] !== 'Administrador') ? $_SESSION['id_usuario'] : null;
+        echo json_encode($model->listar($id_vendedor));
         break;
 
     case 'crear':
@@ -34,6 +36,12 @@ switch ($action) {
 
         if (empty($cart) || $total <= 0) {
             echo json_encode(["success" => false, "mensaje" => "El carrito está vacío o el total es cero."]);
+            exit;
+        }
+
+        $modelCaja = M_Caja::singleton();
+        if (!$modelCaja->obtenerCajaAbierta($id_usuario)) {
+            echo json_encode(["success" => false, "mensaje" => "Debes abrir caja antes de registrar ventas."]);
             exit;
         }
 
@@ -65,6 +73,21 @@ switch ($action) {
             exit;
         }
 
+        if ($_SESSION['rol'] !== 'Administrador') {
+            $ventas_vendedor = $model->listar($_SESSION['id_usuario']);
+            $pertence_a_usuario = false;
+            foreach ($ventas_vendedor as $v) {
+                if ($v['id_venta'] == $id_venta) {
+                    $pertence_a_usuario = true;
+                    break;
+                }
+            }
+            if (!$pertence_a_usuario) {
+                echo json_encode(["success" => false, "mensaje" => "No autorizado para anular esta venta."]);
+                exit;
+            }
+        }
+
         if ($model->anular($id_venta)) {
             echo json_encode(["success" => true, "mensaje" => "Venta anulada con éxito. El stock ha sido retornado."]);
         } else {
@@ -78,6 +101,21 @@ switch ($action) {
         if ($id_venta <= 0) {
             echo json_encode(["success" => false, "mensaje" => "ID de venta inválido."]);
             exit;
+        }
+
+        if ($_SESSION['rol'] !== 'Administrador') {
+            $ventas_vendedor = $model->listar($_SESSION['id_usuario']);
+            $pertence_a_usuario = false;
+            foreach ($ventas_vendedor as $v) {
+                if ($v['id_venta'] == $id_venta) {
+                    $pertence_a_usuario = true;
+                    break;
+                }
+            }
+            if (!$pertence_a_usuario) {
+                echo json_encode([]);
+                exit;
+            }
         }
 
         echo json_encode($model->obtenerDetallesPorVenta($id_venta));

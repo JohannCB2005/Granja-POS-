@@ -7,6 +7,7 @@ if (!isset($_SESSION['id_usuario'])) {
 require_once dirname(__DIR__) . '/models/M_Insumo.php';
 require_once dirname(__DIR__) . '/models/M_Cliente.php';
 require_once dirname(__DIR__) . '/models/M_Categoria.php';
+require_once dirname(__DIR__) . '/models/M_Caja.php';
 
 $modelInsumo = M_Insumo::singleton();
 $insumos = $modelInsumo->listar(); // Array of active insumos with category, unit, stock, etc.
@@ -16,6 +17,9 @@ $clientes = $modelCliente->listarClientes();
 
 $modelCat = M_Categoria::singleton();
 $categorias = $modelCat->listar();
+
+$modelCaja = M_Caja::singleton();
+$cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 ?>
 
 <style>
@@ -139,6 +143,16 @@ $categorias = $modelCat->listar();
 </style>
 
 <div class="container-fluid px-0">
+    <?php if (!$cajaAbierta): ?>
+    <div class="position-fixed w-100 h-100 top-0 start-0 d-flex flex-column align-items-center justify-content-center" style="z-index: 9999; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);">
+        <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 4rem;"></i>
+        <h2 class="fw-bold text-dark mb-2">Caja Cerrada</h2>
+        <p class="text-muted fs-5 mb-4 text-center">Debes aperturar tu caja para poder registrar ventas en el sistema.</p>
+        <a href="index.php?modulo=caja" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm"><i class="bi bi-unlock-fill me-2"></i> Ir a Mi Caja</a>
+    </div>
+    <style> body { overflow: hidden; } </style>
+    <?php endif; ?>
+
     <!-- Top Row: Client Data -->
     <div class="row mb-3">
         <div class="col-12">
