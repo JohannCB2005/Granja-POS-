@@ -1,42 +1,55 @@
 <?php
+// Iniciar sesión PHP para control de autenticación
 session_start();
+
+// Definir cabecera de respuesta JSON
 header('Content-Type: application/json');
 
+// Validar autorización del usuario
 if (!isset($_SESSION['id_usuario'])) {
     echo json_encode(["success" => false, "mensaje" => "No autorizado."]);
     exit;
 }
 
+// Cargar dependencias de Cliente
 require_once dirname(__DIR__) . '/entities/Cliente.php';
 require_once dirname(__DIR__) . '/models/M_Cliente.php';
 
+// Obtener la acción solicitada por GET
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
+// Capturar datos del cuerpo de la petición (JSON) o POST
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input) {
     $input = $_POST;
 }
 
+// Instanciar el modelo de Cliente usando Singleton
 $model = M_Cliente::singleton();
 
+// Enrutar según la acción solicitada
 switch ($action) {
+    
+    // Lista todos los clientes registrados localmente
     case 'listar':
         echo json_encode($model->listarClientes());
         break;
 
+    // Realiza únicamente la consulta externa a la API de Perú (Reniec/Sunat) sin guardar en base de datos
     case 'buscar_api_only':
         $numero_documento = isset($input['numero_documento']) ? trim($input['numero_documento']) : '';
         
+        // Validar longitud del DNI (8 dígitos) o RUC (11 dígitos)
         if (empty($numero_documento) || (strlen($numero_documento) !== 8 && strlen($numero_documento) !== 11)) {
             echo json_encode(["success" => false, "mensaje" => "El número de documento debe tener exactamente 8 u 11 dígitos."]);
             exit;
         }
 
-        // Call apiperu.dev
+        // Determinar el tipo de documento según el tamaño
         $tipo = (strlen($numero_documento) === 8) ? 'dni' : 'ruc';
         $endpoint = "https://apiperu.dev/api/" . $tipo;
         
-        // Load secure token
+        // Cargar archivo de configuración que contiene el token de la API
         $apiConfig = require dirname(__DIR__) . '/config/api.php';
         $token = isset($apiConfig['apiperu_token']) ? $apiConfig['apiperu_token'] : '';
 
@@ -47,6 +60,7 @@ switch ($action) {
 
         $params = json_encode([$tipo => $numero_documento]);
         
+        // Inicializar curl para la llamada HTTP
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => $endpoint,
@@ -72,11 +86,12 @@ switch ($action) {
 
         $resData = json_decode($response, true);
 
+        // Validar si la respuesta de la API es exitosa
         if (!$resData || !isset($resData['success']) || !$resData['success']) {
             $msg = isset($resData['message']) ? $resData['message'] : "Documento no encontrado en el padrón de SUNAT/RENIEC.";
             echo json_encode([
                 "success" => false, 
-                "mensaje" => $msg . " (El origen de datos es el padrón reducido de SUNAT y podría no estar actualizado para ingresos muy recientes)."
+                "mensaje" => $msg . " (El origen de datos es el padrón de SUNAT y podría no estar actualizado para ingresos muy recientes)."
             ]);
             exit;
         }
@@ -84,6 +99,7 @@ switch ($action) {
         $apiData = $resData['data'];
         $mapped = [];
 
+        // Mapear los datos retornados para el formulario frontend
         if ($tipo === 'dni') {
             if (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
                 $mapped['nombre'] = $apiData['nombre_completo'];
@@ -91,12 +107,13 @@ switch ($action) {
                 $mapped['nombre'] = trim(($apiData['nombres'] ?? '') . ' ' . ($apiData['apellido_paterno'] ?? '') . ' ' . ($apiData['apellido_materno'] ?? ''));
             }
             $mapped['direccion'] = $apiData['direccion'] ?? '';
-            $mapped['tipo_cliente'] = 1;
+            $mapped['tipo_cliente'] = 1; // Persona Natural
         } else {
             // RUC
             $estado = isset($apiData['estado']) ? strtoupper(trim($apiData['estado'])) : '';
             $condicion = isset($apiData['condicion']) ? strtoupper(trim($apiData['condicion'])) : '';
 
+            // Validar estado activo y habido en SUNAT
             if (!empty($estado) && $estado !== 'ACTIVO') {
                 echo json_encode([
                     "success" => false, 
@@ -114,7 +131,7 @@ switch ($action) {
 
             $mapped['nombre'] = $apiData['nombre_o_razon_social'] ?? '';
             $mapped['direccion'] = $apiData['direccion'] ?? '';
-            $mapped['tipo_cliente'] = strpos($numero_documento, '20') === 0 ? 2 : 1;
+            $mapped['tipo_cliente'] = strpos($numero_documento, '20') === 0 ? 2 : 1; // 2 = Jurídica (20), 1 = Natural (10)
         }
 
         echo json_encode([
@@ -123,6 +140,7 @@ switch ($action) {
         ]);
         break;
 
+    // Consulta el DNI/RUC en base de datos local; si no existe, consulta la API de Perú y lo registra automáticamente
     case 'consultar_api':
         $numero_documento = isset($input['numero_documento']) ? trim($input['numero_documento']) : '';
         
@@ -131,7 +149,7 @@ switch ($action) {
             exit;
         }
 
-        // 1. Search locally first
+        // 1. Intentar buscar localmente en la base de datos
         $existente = $model->obtenerClientePorDocumento($numero_documento);
         if ($existente) {
             echo json_encode([
@@ -142,11 +160,10 @@ switch ($action) {
             exit;
         }
 
-        // 2. Call apiperu.dev
+        // 2. Si no existe localmente, consultar a la API apiperu.dev
         $tipo = (strlen($numero_documento) === 8) ? 'dni' : 'ruc';
         $endpoint = "https://apiperu.dev/api/" . $tipo;
         
-        // Load secure token
         $apiConfig = require dirname(__DIR__) . '/config/api.php';
         $token = isset($apiConfig['apiperu_token']) ? $apiConfig['apiperu_token'] : '';
 
@@ -186,22 +203,21 @@ switch ($action) {
             $msg = isset($resData['message']) ? $resData['message'] : "Documento no encontrado en el padrón de SUNAT/RENIEC.";
             echo json_encode([
                 "success" => false, 
-                "mensaje" => $msg . " (El origen de datos es el padrón reducido de SUNAT y podría no estar actualizado para ingresos muy recientes)."
+                "mensaje" => $msg . " (El origen de datos es el padrón de SUNAT y podría no estar actualizado para ingresos muy recientes)."
             ]);
             exit;
         }
 
-        // 3. Extract and map data based on DNI/RUC
+        // 3. Extraer y mapear la información obtenida
         $apiData = $resData['data'];
         $tipo_documento = ($tipo === 'dni') ? 1 : 2;
         
         $nombres_razon_social = '';
         $apellidos = '';
         $direccion = '';
-        $tipo_cliente = 1; // Persona Natural by default
+        $tipo_cliente = 1;
 
         if ($tipo === 'dni') {
-            // DNI mapping: use nombre_completo or concatenate names + paterno + materno
             if (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
                 $nombres_razon_social = $apiData['nombre_completo'];
             } else {
@@ -211,11 +227,11 @@ switch ($action) {
             $direccion = $apiData['direccion'] ?? '';
             $tipo_cliente = 1;
         } else {
-            // RUC mapping
-            // Validar estado (debe ser "ACTIVO") y condicion (debe ser "HABIDO")
+            // RUC
             $estado = isset($apiData['estado']) ? strtoupper(trim($apiData['estado'])) : '';
             $condicion = isset($apiData['condicion']) ? strtoupper(trim($apiData['condicion'])) : '';
 
+            // Validaciones del RUC
             if (!empty($estado) && $estado !== 'ACTIVO') {
                 echo json_encode([
                     "success" => false, 
@@ -233,11 +249,10 @@ switch ($action) {
 
             $nombres_razon_social = $apiData['nombre_o_razon_social'] ?? '';
             $direccion = $apiData['direccion'] ?? '';
-            // Si el RUC empieza con 20 es Persona Jurídica, si empieza con 10 es Persona Natural
             $tipo_cliente = strpos($numero_documento, '20') === 0 ? 2 : 1;
         }
 
-        // 4. Automatically insert the new client into DB
+        // 4. Registrar automáticamente al nuevo cliente en la base de datos local
         $cliente = new Cliente($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, '', $tipo_cliente);
         
         $resultado = $model->registrarCliente($cliente);
@@ -259,22 +274,26 @@ switch ($action) {
         }
         break;
 
+    // Registra un cliente de manera manual
     case 'crear':
-        $tipo_documento = isset($input['tipo_documento']) ? intval($input['tipo_documento']) : 1; // 1 = DNI, 2 = RUC, etc.
+        $tipo_documento = isset($input['tipo_documento']) ? intval($input['tipo_documento']) : 1; 
         $numero_documento = isset($input['numero_documento']) ? trim($input['numero_documento']) : '';
         $nombres_razon_social = isset($input['nombres_razon_social']) ? trim($input['nombres_razon_social']) : '';
         $apellidos = isset($input['apellidos']) ? trim($input['apellidos']) : '';
         $direccion = isset($input['direccion']) ? trim($input['direccion']) : '';
         $telefono = isset($input['telefono']) ? trim($input['telefono']) : '';
-        $tipo_cliente = isset($input['tipo_cliente']) ? intval($input['tipo_cliente']) : 1; // e.g. 1 = Natural, 2 = Jurídico
+        $tipo_cliente = isset($input['tipo_cliente']) ? intval($input['tipo_cliente']) : 1; 
 
+        // Validación de campos requeridos
         if (empty($numero_documento) || empty($nombres_razon_social)) {
             echo json_encode(["success" => false, "mensaje" => "N° de documento y Nombres/Razón Social son obligatorios."]);
             exit;
         }
 
+        // Crear la entidad cliente
         $cliente = new Cliente($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, $telefono, $tipo_cliente);
         
+        // Intentar registrar el cliente
         $resultado = $model->registrarCliente($cliente);
         if ($resultado === true) {
             $nuevoCliente = $model->obtenerClientePorDocumento($numero_documento);
@@ -284,7 +303,6 @@ switch ($action) {
                 "cliente" => $nuevoCliente
             ]);
         } else {
-            // $resultado contains the DB error message string
             $errorMsg = "Error al registrar el cliente.";
             if (is_string($resultado) && stripos($resultado, 'Duplicate entry') !== false) {
                 $errorMsg = "El número de documento '$numero_documento' ya se encuentra registrado. Si el cliente existe, búsquelo por su documento.";
@@ -295,6 +313,7 @@ switch ($action) {
         }
         break;
 
+    // Actualiza los datos de un cliente
     case 'actualizar':
         $id_cliente = isset($input['id_cliente']) ? intval($input['id_cliente']) : 0;
         $tipo_documento = isset($input['tipo_documento']) ? intval($input['tipo_documento']) : 1;
@@ -305,14 +324,17 @@ switch ($action) {
         $telefono = isset($input['telefono']) ? trim($input['telefono']) : '';
         $tipo_cliente = isset($input['tipo_cliente']) ? intval($input['tipo_cliente']) : 1;
 
+        // Validaciones previas
         if ($id_cliente <= 0 || empty($numero_documento) || empty($nombres_razon_social)) {
             echo json_encode(["success" => false, "mensaje" => "Datos inválidos o incompletos."]);
             exit;
         }
 
+        // Crear entidad y guardar id
         $cliente = new Cliente($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, $telefono, $tipo_cliente);
         $cliente->id_cliente = $id_cliente;
 
+        // Ejecutar actualización
         if ($model->actualizarCliente($cliente)) {
             echo json_encode(["success" => true, "mensaje" => "Cliente actualizado con éxito."]);
         } else {
@@ -320,6 +342,7 @@ switch ($action) {
         }
         break;
 
+    // Realiza la eliminación física o lógica de un cliente
     case 'eliminar':
         $id_cliente = isset($input['id_cliente']) ? intval($input['id_cliente']) : 0;
 
@@ -328,6 +351,7 @@ switch ($action) {
             exit;
         }
 
+        // Eliminar cliente del sistema
         if ($model->eliminarCliente($id_cliente)) {
             echo json_encode(["success" => true, "mensaje" => "Cliente eliminado con éxito."]);
         } else {

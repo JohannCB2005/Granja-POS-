@@ -31,7 +31,7 @@ switch ($action) {
         $apellidos = isset($input['apellidos']) ? trim($input['apellidos']) : '';
         $direccion = isset($input['direccion']) ? trim($input['direccion']) : '';
         $telefono = isset($input['telefono']) ? trim($input['telefono']) : '';
-        $id_rol = isset($input['id_rol']) ? intval($input['id_rol']) : 2; // Default to Vendedor
+        $id_rol = isset($input['id_rol']) ? intval($input['id_rol']) : 2; // Por defecto Vendedor
         $username = isset($input['username']) ? trim($input['username']) : '';
         $password = isset($input['password']) ? trim($input['password']) : '';
 
@@ -40,13 +40,13 @@ switch ($action) {
             exit;
         }
 
-        // Validate Password Strength
+        // Validar la fortaleza de la contraseña
         if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password)) {
             echo json_encode(["success" => false, "mensaje" => "La contraseña debe tener al menos 8 caracteres, incluir 1 mayúscula, 1 número y 1 carácter especial."]);
             exit;
         }
 
-        // Hash the password securely
+        // Encriptar la contraseña de forma segura
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         $usuario = new Usuario($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, $telefono, $id_rol, $username, $hashedPassword);
@@ -78,7 +78,7 @@ switch ($action) {
         $usuario->id_usuario = $id_usuario;
 
         if ($model->actualizarUsuario($usuario)) {
-            // Optional: If password is provided, we can update it separately. Let's add password update if not empty!
+            // Opcional: Si se proporciona una contraseña, la actualizamos por separado.
             $password = isset($input['password']) ? trim($input['password']) : '';
             if (!empty($password)) {
                 if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/', $password)) {
@@ -90,7 +90,7 @@ switch ($action) {
                     $stmt = $dbh->prepare("UPDATE usuarios SET password = ? WHERE id_usuario = ?");
                     $stmt->execute([password_hash($password, PASSWORD_DEFAULT), $id_usuario]);
                 } catch (Exception $e) {
-                    // Ignore or log error
+                    // Ignorar o registrar error
                 }
             }
             echo json_encode(["success" => true, "mensaje" => "Usuario actualizado con éxito."]);
@@ -107,7 +107,7 @@ switch ($action) {
             exit;
         }
 
-        // Logic delete (set estado to 0 in personas table)
+        // Eliminación lógica (establecer estado a 0 en la tabla personas)
         if ($model->EliminarUsuario($id_usuario, 0)) {
             echo json_encode(["success" => true, "mensaje" => "Usuario eliminado con éxito."]);
         } else {
