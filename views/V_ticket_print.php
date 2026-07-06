@@ -1,20 +1,25 @@
 <?php
-// Ticket de impresion - standalone, requiere sesión activa
+// Generación del Comprobante para Impresión - Standalone
+// Valida sesión activa; inicia si es que no se ha arrancado previamente
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 if (!isset($_SESSION['id_usuario'])) {
     die('Acceso no autorizado.');
 }
+
+// Cargar la conexión y el modelo de Ventas
 require_once dirname(__DIR__) . '/config/conexion.php';
 require_once dirname(__DIR__) . '/models/M_Venta.php';
 
 $id_venta = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$format   = isset($_GET['format']) ? $_GET['format'] : '80mm'; // 80mm | 58mm | a4
+$format   = isset($_GET['format']) ? $_GET['format'] : '80mm'; // Formatos válidos: 80mm | 58mm | a4
 
 if ($id_venta <= 0) { die('ID de venta inválido.'); }
 
 $model  = M_Venta::singleton();
+
+// Restricción por rol: Vendedor regular solo puede acceder a sus propios comprobantes
 $id_vendedor = ($_SESSION['rol'] !== 'Administrador') ? $_SESSION['id_usuario'] : null;
 $ventas = $model->listar($id_vendedor);
 $venta  = null;
@@ -23,6 +28,7 @@ foreach ($ventas as $v) {
 }
 if (!$venta) { die('Venta no encontrada.'); }
 
+// Recuperar productos vendidos de la transacción y variables globales de facturación
 $detalles = $model->obtenerDetallesPorVenta($id_venta);
 $codigo   = 'V-' . str_pad($venta['id_venta'], 6, '0', STR_PAD_LEFT);
 $tipo_doc = $venta['tipo_comprobante'] == 1 ? 'BOLETA DE VENTA'
@@ -34,7 +40,7 @@ $igv      = $venta['total'] - $subtotal;
 $total    = $venta['total'];
 $estado   = $venta['estado'] == 1 ? 'COMPLETADA' : 'ANULADA';
 
-// Ticket width
+// Ajustes del ancho y tipografía para formatos de ticketeras térmicas
 $isTicket = ($format === '80mm' || $format === '58mm');
 $ticketW  = $format === '58mm' ? '56mm' : '76mm';
 $ticketFs = $format === '58mm' ? '9px'  : '11px';
@@ -47,7 +53,7 @@ $ticketFs = $format === '58mm' ? '9px'  : '11px';
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-<?php if (!$isTicket): /* ===== A4 ===== */ ?>
+<?php if (!$isTicket): /* ===== ESTILOS PARA FORMATO A4 ===== */ ?>
 @page { size: A4; margin: 12mm 15mm; }
 body {
     font-family: Arial, Helvetica, sans-serif;
@@ -56,7 +62,7 @@ body {
     background: #fff;
 }
 
-/* ---- Header ---- */
+/* Encabezado */
 .header {
     display: flex;
     justify-content: space-between;
@@ -110,11 +116,11 @@ body {
     font-weight: bold;
 }
 
-/* ---- Separator ---- */
+/* Separadores */
 .sep { border: none; border-top: 1px dotted #555; margin: 16px 0; }
 .sep-solid { border: none; border-top: 1.5px solid #000; margin: 6px 0; }
 
-/* ---- Info grid ---- */
+/* Grid de Información del Cliente */
 .info-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -131,7 +137,7 @@ body {
 .info-label { color: #444; white-space: nowrap; }
 .info-value { font-weight: 600; color: #000; }
 
-/* ---- Products table ---- */
+/* Tabla de Productos */
 .prod-table {
     width: 100%;
     border-collapse: collapse;
@@ -159,7 +165,7 @@ body {
 }
 .prod-table td.r { text-align: right; }
 
-/* ---- Totals ---- */
+/* Tabla de Importes */
 .totals-wrap {
     display: flex;
     justify-content: flex-end;
@@ -184,7 +190,7 @@ body {
     padding-top: 8px;
 }
 
-/* ---- Footer ---- */
+/* Pie de Página */
 .footer {
     margin-top: 22px;
     font-size: 8.5pt;
@@ -199,7 +205,7 @@ body {
     margin-top: 14px;
 }
 
-<?php else: /* ===== TICKET THERMAL ===== */ ?>
+<?php else: /* ===== ESTILOS PARA TICKETERAS TÉRMICAS ===== */ ?>
 @page { size: <?php echo $ticketW; ?> auto; margin: 3mm; }
 body {
     font-family: 'Courier New', Courier, monospace;
@@ -214,7 +220,6 @@ body {
 .bold { font-weight: bold; }
 p { margin: 1px 0; }
 
-/* Big brand name */
 .brand-logo {
     font-family: Georgia, serif;
     font-size: <?php echo $format === '58mm' ? '26pt' : '32pt'; ?>;
@@ -234,13 +239,13 @@ p { margin: 1px 0; }
 .doc-box .doc-type { font-weight: bold; font-size: 1.1em; }
 .doc-box .doc-code { font-weight: bold; }
 
-/* Info rows */
+/* Tabla de Metadatos */
 .info-block { margin: 4px 0; }
 .info-block table { width: 100%; border-collapse: collapse; }
 .info-block td { padding: 1px 2px; vertical-align: top; }
 .info-block td:first-child { font-weight: bold; white-space: nowrap; padding-right: 4px; }
 
-/* Products */
+/* Tabla de Productos del ticket térmico */
 .prod-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: <?php echo $ticketFs; ?>; }
 .prod-table th { text-align: left; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 2px 1px; font-size: <?php echo $format === '58mm' ? '7px' : '8px'; ?>; }
 .prod-table th.r { text-align: right; }
@@ -256,7 +261,7 @@ p { margin: 1px 0; }
 </head>
 <body>
 
-<?php if (!$isTicket): /* ========= A4 LAYOUT ========= */ ?>
+<?php if (!$isTicket): /* ========= MAQUETADO A4 ========= */ ?>
 <div class="header">
     <div class="header-brand">
         <div class="brand-logo">G</div>
@@ -276,14 +281,12 @@ p { margin: 1px 0; }
 <hr class="sep">
 
 <div class="info-grid">
-    <!-- Left column -->
     <div>
         <div class="info-row"><span class="info-label">Cliente:</span><span class="info-value"><?php echo htmlspecialchars($venta['cliente']); ?></span></div>
         <div class="info-row"><span class="info-label">Doc. / RUC:</span><span class="info-value"><?php echo htmlspecialchars($venta['numero_documento']); ?></span></div>
         <div class="info-row"><span class="info-label">Vendedor:</span><span class="info-value"><?php echo htmlspecialchars($venta['vendedor']); ?></span></div>
         <div class="info-row"><span class="info-label">Estado:</span><span class="info-value"><?php echo $estado; ?></span></div>
     </div>
-    <!-- Right column -->
     <div>
         <div class="info-row"><span class="info-label">Fecha de emisión:</span><span class="info-value"><?php echo $fecha_emision; ?></span></div>
         <div class="info-row"><span class="info-label">Fecha vencimiento:</span><span class="info-value"><?php echo $fecha_venc; ?></span></div>
@@ -337,7 +340,7 @@ p { margin: 1px 0; }
     <p class="thanks">¡Gracias por su compra!</p>
 </div>
 
-<?php else: /* ========= TICKET THERMAL LAYOUT ========= */ ?>
+<?php else: /* ========= MAQUETADO TICKETERAS TÉRMICAS ========= */ ?>
 
 <div class="brand-logo">Granja UNP</div>
 <div class="biz-info">
@@ -401,6 +404,7 @@ p { margin: 1px 0; }
 
 <?php endif; ?>
 
+<!-- Disparar automáticamente la impresión del navegador si se incluye el parámetro print=1 en la URL -->
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('print') === '1') {

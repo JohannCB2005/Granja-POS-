@@ -1,16 +1,18 @@
 <?php
+// Restringir el acceso: Solo usuarios logueados con rol de Administrador pueden ver esta vista
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar modelo de categorías y listar las categorías activas
 require_once dirname(__DIR__) . '/models/M_Categoria.php';
 $modelCat = M_Categoria::singleton();
-$categorias = $modelCat->listar(); // list active categories (where estado = 1)
+$categorias = $modelCat->listar(); 
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Categorías</h4>
@@ -22,9 +24,9 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
         </button>
     </div>
 
-    <!-- Categories Card -->
+    <!-- Tarjeta Principal de Categorías -->
     <div class="gp-card">
-        <!-- Search bar -->
+        <!-- Barra de Búsqueda -->
         <div class="row mb-3">
             <div class="col-12 col-md-4">
                 <div class="input-group">
@@ -36,7 +38,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Tabla de Categorías -->
         <div class="table-responsive">
             <table class="table align-middle text-sm" id="tableCategorias" style="font-size: 14px;">
                 <thead>
@@ -71,6 +73,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
                                 </td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
+                                        <!-- Botón Editar: Carga datos en data-attributes para el modal -->
                                         <button class="btn btn-link text-muted p-1 hover-text-primary edit-cat-btn" 
                                                 data-id="<?php echo $cat['id_categoria']; ?>"
                                                 data-nombre="<?php echo htmlspecialchars($cat['nombre']); ?>"
@@ -78,6 +81,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
                                                 title="Editar">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
+                                        <!-- Botón Eliminar: Ejecuta la desactivación por ID -->
                                         <button class="btn btn-link text-muted p-1 hover-text-danger delete-cat-btn" 
                                                 data-id="<?php echo $cat['id_categoria']; ?>"
                                                 data-nombre="<?php echo htmlspecialchars($cat['nombre']); ?>"
@@ -152,10 +156,10 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
     </div>
 </div>
 
-<!-- JavaScript for CRUD Operations -->
+<!-- JavaScript para Operaciones CRUD -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Search functionality
+        // 1. Filtrado dinámico de la tabla en base a la barra de búsqueda
         const searchInput = document.getElementById('searchCategorias');
         const rows = document.querySelectorAll('.category-row');
 
@@ -173,7 +177,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
             });
         }
 
-        // Add Category Submit
+        // 2. Evento Submit para registrar Nueva Categoría
         const formNueva = document.getElementById('formNuevaCategoria');
         if (formNueva) {
             formNueva.addEventListener('submit', async (e) => {
@@ -211,7 +215,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
             });
         }
 
-        // Edit button click handler
+        // 3. Manejador para rellenar campos y abrir el Modal de Edición
         const editModal = new bootstrap.Modal(document.getElementById('editarCategoriaModal'));
         document.querySelectorAll('.edit-cat-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -222,7 +226,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
             });
         });
 
-        // Edit Form Submit
+        // 4. Evento Submit para guardar cambios de la Categoría editada
         const formEditar = document.getElementById('formEditarCategoria');
         if (formEditar) {
             formEditar.addEventListener('submit', async (e) => {
@@ -262,7 +266,7 @@ $categorias = $modelCat->listar(); // list active categories (where estado = 1)
             });
         }
 
-        // Delete Button handler
+        // 5. Manejador del Clic para desactivar/eliminar lógicamente una Categoría
         document.querySelectorAll('.delete-cat-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id_categoria = btn.dataset.id;

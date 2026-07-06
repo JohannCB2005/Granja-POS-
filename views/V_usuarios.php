@@ -1,9 +1,11 @@
 <?php
+// Restricción de acceso: Solo el Administrador puede listar o realizar mantenimiento de usuarios
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar modelos de Usuarios y Roles para desplegar las vistas y formularios modales
 require_once dirname(__DIR__) . '/models/M_Usuario.php';
 require_once dirname(__DIR__) . '/models/M_Rol.php';
 
@@ -15,7 +17,7 @@ $roles = $modelRol->listar();
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Usuarios</h4>
@@ -27,9 +29,9 @@ $roles = $modelRol->listar();
         </button>
     </div>
 
-    <!-- Usuarios Card -->
+    <!-- Panel de Usuarios -->
     <div class="gp-card">
-        <!-- Search bar -->
+        <!-- Barra de Búsqueda -->
         <div class="row mb-3">
             <div class="col-12 col-md-4">
                 <div class="input-group">
@@ -41,7 +43,7 @@ $roles = $modelRol->listar();
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Tabla del Listado de Usuarios -->
         <div class="table-responsive">
             <table class="table align-middle text-sm" id="tableUsuarios" style="font-size: 14px;">
                 <thead>
@@ -79,6 +81,7 @@ $roles = $modelRol->listar();
                                     <?php echo htmlspecialchars($usr['username']); ?>
                                 </td>
                                 <td>
+                                    <!-- Insignias diferenciadas por rol de usuario -->
                                     <span class="badge <?php echo $usr['rol'] === 'Administrador' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-20' : 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20'; ?> px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
                                         <?php echo htmlspecialchars($usr['rol']); ?>
                                     </span>
@@ -93,6 +96,7 @@ $roles = $modelRol->listar();
                                 </td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
+                                        <!-- Mapeo de atributos data para el formulario de edición -->
                                         <button class="btn btn-link text-muted p-1 hover-text-primary edit-usuario-btn" 
                                                 data-id="<?php echo $usr['id_usuario']; ?>"
                                                 data-tipodoc="<?php echo $usr['tipo_documento']; ?>"
@@ -106,6 +110,7 @@ $roles = $modelRol->listar();
                                                 title="Editar">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
+                                        <!-- Impedir la auto-eliminación lógica de la sesión activa -->
                                         <?php if ($usr['id_usuario'] != $_SESSION['id_usuario']): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger delete-usuario-btn" 
                                                     data-id="<?php echo $usr['id_usuario']; ?>"
@@ -180,6 +185,7 @@ $roles = $modelRol->listar();
                         <div class="col-6">
                             <label for="new_password" class="form-label fw-semibold" style="font-size: 13px;">Contraseña</label>
                             <input type="password" class="form-control" id="new_password" placeholder="Contraseña" required>
+                            <!-- Barra visual evaluadora de complejidad de clave -->
                             <div class="progress mt-2" style="height: 5px;">
                                 <div id="pass_strength_bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;"></div>
                             </div>
@@ -276,10 +282,10 @@ $roles = $modelRol->listar();
     </div>
 </div>
 
-<!-- JavaScript for CRUD Operations -->
+<!-- JavaScript para Operaciones CRUD y Validación de Fortaleza de Contraseñas -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Password Strength Evaluator
+        // Evaluar la fortaleza de la contraseña en una escala del 0 al 100
         function evaluatePassword(pass) {
             let strength = 0;
             if (pass.length >= 8) strength += 25;
@@ -289,6 +295,7 @@ $roles = $modelRol->listar();
             return strength;
         }
 
+        // Actualizar visualmente la barra de progreso de seguridad de contraseña
         function updateStrengthUI(input, bar, textEl, container = null) {
             const pass = input.value;
             if (container && pass.length === 0) {
@@ -342,7 +349,7 @@ $roles = $modelRol->listar();
             editPassInput.addEventListener('input', () => updateStrengthUI(editPassInput, editPassBar, editPassText, editProgressContainer));
         }
 
-        // Search functionality
+        // Búsqueda interactiva en el listado
         const searchInput = document.getElementById('searchUsuarios');
         const rows = document.querySelectorAll('.usuario-row');
 
@@ -360,7 +367,7 @@ $roles = $modelRol->listar();
             });
         }
 
-        // Add Usuario Submit
+        // Procesar inserción de Nuevo Usuario por AJAX
         const formNuevo = document.getElementById('formNuevoUsuario');
         if (formNuevo) {
             formNuevo.addEventListener('submit', async (e) => {
@@ -405,7 +412,7 @@ $roles = $modelRol->listar();
             });
         }
 
-        // Edit button click handler
+        // Rellenar campos en el modal de Edición
         const editModal = new bootstrap.Modal(document.getElementById('editarUsuarioModal'));
         document.querySelectorAll('.edit-usuario-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -418,13 +425,13 @@ $roles = $modelRol->listar();
                 document.getElementById('edit_telefono').value = btn.dataset.telefono;
                 document.getElementById('edit_rol').value = btn.dataset.rolid;
                 document.getElementById('edit_username').value = btn.dataset.username;
-                document.getElementById('edit_password').value = ''; // clear password input
+                document.getElementById('edit_password').value = '';
                 
                 editModal.show();
             });
         });
 
-        // Edit Form Submit
+        // Enviar actualización de Usuario por AJAX
         const formEditar = document.getElementById('formEditarUsuario');
         if (formEditar) {
             formEditar.addEventListener('submit', async (e) => {
@@ -471,7 +478,7 @@ $roles = $modelRol->listar();
             });
         }
 
-        // Delete Button handler
+        // Eliminar lógicamente (suspender cuenta de acceso) un usuario
         document.querySelectorAll('.delete-usuario-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id_usuario = btn.dataset.id;

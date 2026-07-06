@@ -1,16 +1,18 @@
 <?php
+// Validar que exista una sesión activa
 if (!isset($_SESSION['id_usuario'])) {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar el modelo de Cliente para el listado inicial
 require_once dirname(__DIR__) . '/models/M_Cliente.php';
 $modelCliente = M_Cliente::singleton();
 $clientes = $modelCliente->listarClientes();
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Clientes</h4>
@@ -22,9 +24,9 @@ $clientes = $modelCliente->listarClientes();
         </button>
     </div>
 
-    <!-- Clientes Card -->
+    <!-- Panel de Clientes -->
     <div class="gp-card">
-        <!-- Search bar -->
+        <!-- Barra de Búsqueda -->
         <div class="row mb-3">
             <div class="col-12 col-md-4">
                 <div class="input-group">
@@ -36,7 +38,7 @@ $clientes = $modelCliente->listarClientes();
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Tabla del Listado de Clientes -->
         <div class="table-responsive">
             <table class="table align-middle text-sm" id="tableClientes" style="font-size: 14px;">
                 <thead>
@@ -90,6 +92,7 @@ $clientes = $modelCliente->listarClientes();
                                 </td>
                                 <td class="text-end">
                                     <div class="d-inline-flex gap-1">
+                                        <!-- Cargar los datos del cliente en atributos data para mapeo del script -->
                                         <button class="btn btn-link text-muted p-1 hover-text-primary edit-cliente-btn" 
                                                 data-id="<?php echo $cli['id_cliente']; ?>"
                                                 data-tipodoc="<?php echo $cli['tipo_documento']; ?>"
@@ -102,7 +105,8 @@ $clientes = $modelCliente->listarClientes();
                                                 title="Editar">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
-                                        <?php if ($cli['id_cliente'] != 1): // Do not delete Público General (id_cliente = 1) ?>
+                                        <!-- No se permite eliminar lógicamente al Cliente ID 1 (Público General) para no romper el flujo de ventas -->
+                                        <?php if ($cli['id_cliente'] != 1): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger delete-cliente-btn" 
                                                     data-id="<?php echo $cli['id_cliente']; ?>"
                                                     data-nombre="<?php echo htmlspecialchars($cli['nombres_razon_social'] . ' ' . $cli['apellidos']); ?>"
@@ -130,7 +134,7 @@ $clientes = $modelCliente->listarClientes();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
             <div class="modal-body p-4" style="font-size: 13px;">
-                <!-- Hidden fields for compatibility -->
+                <!-- Campos ocultos requeridos para compatibilidad de registro -->
                 <input type="hidden" id="new_apellidos" value="">
                 <input type="hidden" id="new_direccion" value="">
 
@@ -239,10 +243,10 @@ $clientes = $modelCliente->listarClientes();
     </div>
 </div>
 
-<!-- JavaScript for CRUD Operations -->
+<!-- JavaScript para Operaciones CRUD de Clientes -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Search functionality
+        // 1. Filtrado dinámico de clientes (barra de búsqueda)
         const searchInput = document.getElementById('searchClientes');
         const rows = document.querySelectorAll('.cliente-row');
 
@@ -260,7 +264,7 @@ $clientes = $modelCliente->listarClientes();
             });
         }
 
-        // --- RENIEC/SUNAT API lookup for new client ---
+        // 2. Elementos del formulario para consulta RENIEC/SUNAT API
         const new_tipoDoc     = document.getElementById('new_tipo_doc');
         const new_numDoc      = document.getElementById('new_num_doc');
         const new_searchBtn   = document.getElementById('new_searchApiBtn');
@@ -270,14 +274,14 @@ $clientes = $modelCliente->listarClientes();
         const new_direccion   = document.getElementById('new_direccion');
         const new_saveBtn     = document.getElementById('new_saveClientBtn');
 
-        // Update RENIEC/SUNAT button label when tipo doc changes
+        // Alternar el texto del botón y resetear inputs al cambiar de tipo de documento
         new_tipoDoc.addEventListener('change', () => {
             new_searchTxt.innerText = new_tipoDoc.value === '1' ? 'RENIEC' : 'SUNAT';
             new_numDoc.value = '';
             new_nombres.value = '';
         });
 
-        // API Search
+        // Búsqueda remota a través del endpoint API de C_Cliente
         new_searchBtn.addEventListener('click', async () => {
             const docNum  = new_numDoc.value.trim();
             const docType = new_tipoDoc.value;
@@ -323,12 +327,12 @@ $clientes = $modelCliente->listarClientes();
             }
         });
 
-        // Only allow digits in doc number field
+        // Forzar a que solo se ingresen números en el campo de documento
         new_numDoc.addEventListener('input', () => {
             new_numDoc.value = new_numDoc.value.replace(/\D/g, '');
         });
 
-        // Save new client
+        // Registrar un nuevo cliente localmente
         new_saveBtn.addEventListener('click', async () => {
             const tipo_documento       = new_tipoDoc.value;
             const numero_documento     = new_numDoc.value.trim();
@@ -365,7 +369,7 @@ $clientes = $modelCliente->listarClientes();
             }
         });
 
-        // Reset fields when modal is closed
+        // Resetear campos del modal cuando se cierra
         document.getElementById('nuevoClienteModal').addEventListener('hidden.bs.modal', () => {
             new_numDoc.value    = '';
             new_nombres.value   = '';
@@ -377,7 +381,7 @@ $clientes = $modelCliente->listarClientes();
             document.getElementById('new_telefono').value  = '';
         });
 
-        // Edit button click handler
+        // Rellenar campos y abrir modal para edición de cliente
         const editModal = new bootstrap.Modal(document.getElementById('editarClienteModal'));
         document.querySelectorAll('.edit-cliente-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -394,7 +398,7 @@ $clientes = $modelCliente->listarClientes();
             });
         });
 
-        // Edit Form Submit
+        // Confirmar y procesar cambios del cliente editado
         const formEditar = document.getElementById('formEditarCliente');
         if (formEditar) {
             formEditar.addEventListener('submit', async (e) => {
@@ -434,12 +438,12 @@ $clientes = $modelCliente->listarClientes();
                         });
                     }
                 } catch (error) {
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo conectar al servidor.' });
+                    Swal.fire({ icon:'error', title: 'Error', text: 'No se pudo conectar al servidor.' });
                 }
             });
         }
 
-        // Delete Button handler
+        // Eliminar lógicamente un cliente del listado activo
         document.querySelectorAll('.delete-cliente-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id_cliente = btn.dataset.id;
@@ -481,7 +485,7 @@ $clientes = $modelCliente->listarClientes();
                                 });
                             }
                         } catch (error) {
-                            Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo conectar al servidor.' });
+                            Swal.fire({ icon:'error', title: 'Error', text: 'No se pudo conectar al servidor.' });
                         }
                     }
                 });

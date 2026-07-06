@@ -1,17 +1,24 @@
 <?php
-if (!isset($_SESSION['id_usuario'])) { echo "<h1>Acceso denegado</h1>"; exit; }
+// Validar sesión activa en el sistema
+if (!isset($_SESSION['id_usuario'])) { 
+    echo "<h1>Acceso denegado</h1>"; 
+    exit; 
+}
+
+// Cargar el modelo de Kardex para obtener los productos del selector
 require_once dirname(__DIR__) . '/models/M_Kardex.php';
 $modelKardex = M_Kardex::singleton();
 $insumos = $modelKardex->listarInsumos();
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Header -->
+    <!-- Encabezado de la Sección -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Kardex de Inventario</h4>
             <p class="text-muted mb-0" style="font-size:14px;">Registro cronológico de entradas, salidas y saldos valorizados por producto.</p>
         </div>
+        <!-- Botones para exportar información (deshabilitados hasta seleccionar un insumo) -->
         <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary d-flex align-items-center gap-2" id="btnExportExcel" style="font-size:13px;" disabled>
                 <i class="bi bi-file-earmark-excel"></i> Exportar Excel
@@ -22,7 +29,7 @@ $insumos = $modelKardex->listarInsumos();
         </div>
     </div>
 
-    <!-- Product Selector -->
+    <!-- Selector de Productos -->
     <div class="gp-card mb-3">
         <div class="row align-items-center">
             <div class="col-12 col-md-4">
@@ -43,7 +50,7 @@ $insumos = $modelKardex->listarInsumos();
         </div>
     </div>
 
-    <!-- Summary Cards (hidden until product selected) -->
+    <!-- Tarjetas de Resumen Acumulado (Ocultas hasta que se elija un producto del selector) -->
     <div id="kardexSummary" class="gp-card mb-3 d-none">
         <div class="row g-3 text-center">
             <div class="col-6 col-md-2 border-end">
@@ -74,7 +81,7 @@ $insumos = $modelKardex->listarInsumos();
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filtros de Búsqueda Avanzada (Ocultos inicialmente) -->
     <div id="kardexFilters" class="gp-card mb-3 d-none">
         <div class="row align-items-center g-2">
             <div class="col-6 col-md-2">
@@ -103,19 +110,19 @@ $insumos = $modelKardex->listarInsumos();
         </div>
     </div>
 
-    <!-- Kardex Table -->
+    <!-- Contenedor Principal de la Tabla del Kardex -->
     <div id="kardexTableWrap" class="gp-card d-none">
-        <!-- Loading -->
+        <!-- Spinner de Carga -->
         <div id="kardexLoading" class="text-center py-5 d-none">
             <div class="spinner-border text-success" role="status"></div>
             <p class="text-muted mt-2 mb-0" style="font-size:14px;">Cargando movimientos...</p>
         </div>
-        <!-- Empty -->
+        <!-- Alerta de Tabla Vacía -->
         <div id="kardexEmpty" class="text-center py-5 d-none">
             <i class="bi bi-inbox" style="font-size:2.5rem; color:#ccc;"></i>
             <p class="text-muted mt-2 mb-0">No hay movimientos registrados para este producto.</p>
         </div>
-        <!-- Table -->
+        <!-- Tabla Estilo Sunat (Entradas, Salidas y Saldos Ponderados) -->
         <div class="table-responsive" id="kardexTableContainer">
             <table class="table align-middle mb-0" style="font-size:13px;">
                 <thead>
@@ -145,7 +152,7 @@ $insumos = $modelKardex->listarInsumos();
         </div>
     </div>
 
-    <!-- Placeholder when no product selected -->
+    <!-- Indicador inicial cuando no hay un producto seleccionado -->
     <div id="kardexPlaceholder" class="gp-card text-center py-5">
         <i class="bi bi-journal-text" style="font-size:3rem; color:#c8e6c9;"></i>
         <h6 class="mt-3 fw-semibold text-muted">Selecciona un producto para ver su Kardex</h6>
@@ -155,12 +162,14 @@ $insumos = $modelKardex->listarInsumos();
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Referencias a los filtros y el selector de productos
     const selectInsumo   = document.getElementById('selectInsumo');
     const filterTipo     = document.getElementById('filterTipo');
     const filterDesde    = document.getElementById('filterDesde');
     const filterHasta    = document.getElementById('filterHasta');
     const filterBusqueda = document.getElementById('filterBusqueda');
 
+    // Referencias a contenedores visuales de UI
     const kardexSummary      = document.getElementById('kardexSummary');
     const kardexFilters      = document.getElementById('kardexFilters');
     const kardexTableWrap    = document.getElementById('kardexTableWrap');
@@ -170,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const kardexTableCont    = document.getElementById('kardexTableContainer');
     const kardexTbody        = document.getElementById('kardexTbody');
 
+    // Referencias a campos de cabecera analítica de Kardex
     const sumCodigo   = document.getElementById('sumCodigo');
     const sumCategoria = document.getElementById('sumCategoria');
     const sumEntradas = document.getElementById('sumEntradas');
@@ -177,20 +187,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const sumStock    = document.getElementById('sumStock');
     const sumStockVal = document.getElementById('sumStockVal');
 
+    // Botones de acción
     const btnExportExcel = document.getElementById('btnExportExcel');
     const btnExportPDF   = document.getElementById('btnExportPDF');
 
     let debounceTimer = null;
-    let currentData   = null;
+    let currentData   = null; // Almacena el JSON de la consulta actual para exportación
 
+    // Formatear a Moneda local (S/)
     function fmt(n) {
         if (n === null || n === undefined) return '—';
         return 'S/ ' + parseFloat(n).toFixed(2);
     }
+
+    // Formatear cantidades numéricas y concatenar su unidad de medida
     function fmtNum(n, unidad) {
         if (n === null || n === undefined) return '—';
         return parseFloat(n).toLocaleString('es-PE', {minimumFractionDigits: 0, maximumFractionDigits: 2}) + (unidad ? ' ' + unidad : '');
     }
+
+    // Formatear fecha y hora al estándar de Perú
     function fmtFecha(f) {
         if (!f) return '—';
         const d = new Date(f);
@@ -198,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                d.toLocaleTimeString('es-PE', {hour:'2-digit', minute:'2-digit'});
     }
 
+    // Petición AJAX al controlador C_Kardex.php para reconstruir los movimientos
     async function cargarKardex() {
         const id = selectInsumo.value;
         if (!id) return;
@@ -205,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const opt    = selectInsumo.options[selectInsumo.selectedIndex];
         const unidad = opt.dataset.unidad || '';
 
-        // Show loading
+        // Levantar spinner y ocultar tabla / alertas de datos vacíos
         kardexLoading.classList.remove('d-none');
         kardexEmpty.classList.add('d-none');
         kardexTableCont.classList.add('d-none');
@@ -233,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentData = json.data;
             const d = json.data;
 
-            // Summary
+            // Rellenar métricas analíticas superiores
             sumCodigo.textContent    = 'INS-' + String(id).padStart(3, '0');
             sumCategoria.textContent = opt.dataset.categoria || '—';
             sumEntradas.innerHTML    = `<i class="bi bi-arrow-down-circle-fill text-success"></i> ${fmtNum(d.total_entrada_cant, unidad)}`;
@@ -241,17 +258,18 @@ document.addEventListener('DOMContentLoaded', () => {
             sumStock.textContent     = fmtNum(d.stock_actual, unidad);
             sumStockVal.textContent  = fmt(d.stock_actual * d.precio_unitario);
 
-            // Enable export buttons
+            // Activar botones de exportación
             btnExportExcel.disabled = false;
             btnExportPDF.disabled   = false;
 
-            // Render table
+            // Verificar si hay registros
             if (!d.rows || d.rows.length === 0) {
                 kardexEmpty.classList.remove('d-none');
                 kardexTableCont.classList.add('d-none');
                 return;
             }
 
+            // Dibujar dinámicamente filas del Kardex
             kardexTbody.innerHTML = '';
             d.rows.forEach(row => {
                 const isEntrada = row.tipo_movimiento === 'entrada';
@@ -260,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #f0f0f0';
 
+                // Distinguir la fila del Saldo Inicial con fondo verde suave
                 if (isSaldo) {
                     tr.style.background = '#f9fdf9';
                 }
@@ -274,17 +293,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="fw-semibold" style="color:#15803d; font-size:12px;">${row.numero_doc}</td>
                     <td class="text-muted" style="font-size:12px;">${row.concepto}</td>
 
-                    <!-- ENTRADAS -->
+                    <!-- COLUMNAS ENTRADAS -->
                     <td class="text-end border-start border-2 ${isEntrada ? 'fw-semibold text-success' : 'text-muted'}">${isEntrada ? fmtNum(row.entrada_cant, unidad) : '—'}</td>
                     <td class="text-end ${isEntrada ? '' : 'text-muted'}">${isEntrada ? fmt(row.entrada_cu) : '—'}</td>
                     <td class="text-end ${isEntrada ? 'fw-semibold' : 'text-muted'}">${isEntrada ? fmt(row.entrada_ct) : '—'}</td>
 
-                    <!-- SALIDAS -->
+                    <!-- COLUMNAS SALIDAS -->
                     <td class="text-end border-start border-2 ${!isEntrada && !isSaldo ? 'fw-semibold text-danger' : 'text-muted'}">${!isEntrada && !isSaldo ? fmtNum(row.salida_cant, unidad) : '—'}</td>
                     <td class="text-end ${!isEntrada && !isSaldo ? '' : 'text-muted'}">${!isEntrada && !isSaldo ? fmt(row.salida_cu) : '—'}</td>
                     <td class="text-end ${!isEntrada && !isSaldo ? 'fw-semibold' : 'text-muted'}">${!isEntrada && !isSaldo ? fmt(row.salida_ct) : '—'}</td>
 
-                    <!-- SALDOS -->
+                    <!-- COLUMNAS SALDOS (PROMEDIO PONDERADO) -->
                     <td class="text-end border-start border-2 fw-bold">${fmtNum(row.saldo_cant, unidad)}</td>
                     <td class="text-end">${fmt(row.saldo_cu)}</td>
                     <td class="text-end fw-semibold">${fmt(row.saldo_ct)}</td>
@@ -300,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Manejar el cambio de producto del dropdown
     function onProductChange() {
         const id = selectInsumo.value;
         if (!id) {
@@ -318,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarKardex();
     }
 
+    // Retardar ligeramente la recarga (Debounce) para búsquedas rápidas en teclado
     function onFilterChange() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(cargarKardex, 350);
@@ -329,18 +350,17 @@ document.addEventListener('DOMContentLoaded', () => {
     filterHasta.addEventListener('change', onFilterChange);
     filterBusqueda.addEventListener('input', onFilterChange);
 
-    // Export PDF (basic print)
+    // Exportar a PDF (dispara el cuadro de impresión nativo del navegador)
     btnExportPDF.addEventListener('click', () => {
         window.print();
     });
 
-    // Export Excel (CSV download)
+    // Exportar a formato CSV legible directamente por Excel
     btnExportExcel.addEventListener('click', () => {
         if (!currentData || !currentData.rows) return;
         const opt    = selectInsumo.options[selectInsumo.selectedIndex];
-        const unidad = opt.dataset.unidad || '';
         const nombre = opt.text;
-        let csv = '\uFEFF'; // BOM for Excel UTF-8
+        let csv = '\uFEFF'; // BOM para codificar correctamente caracteres en español y UTF-8 en Excel
         csv += `Kardex de Inventario - ${nombre}\n`;
         csv += `Fecha,Tipo Doc.,N° Doc.,Concepto,Entrada Cant.,Entrada C.U.,Entrada C.T.,Salida Cant.,Salida C.U.,Salida C.T.,Saldo Cant.,Saldo C.U.,Saldo C.T.\n`;
 

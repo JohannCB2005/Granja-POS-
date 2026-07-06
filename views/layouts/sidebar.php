@@ -1,8 +1,10 @@
 <?php
+// Obtener el módulo actual para pintar con clase "active" el botón seleccionado
 $moduloActual = isset($_GET['modulo']) ? $_GET['modulo'] : ($_SESSION['rol'] === 'Administrador' ? 'dashboard' : 'nueva-venta');
 $rol = $_SESSION['rol'];
 ?>
 <aside class="sidebar" id="sidebar">
+    <!-- Logotipo y Nombre de Marca -->
     <div class="sidebar-brand">
         <div class="sidebar-brand-icon" style="background: transparent; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
             <img src="assets/logo_unp.png" alt="UNP" style="max-width: 100%; max-height: 100%; object-fit: contain;">
@@ -13,8 +15,9 @@ $rol = $_SESSION['rol'];
         </div>
     </div>
     
+    <!-- Menú de Navegación Lateral -->
     <div class="sidebar-menu">
-        <!-- Dashboard group -->
+        <!-- Grupo de Análisis General (Solo Administrador) -->
         <?php if ($rol === 'Administrador'): ?>
             <a href="index.php?modulo=dashboard" class="menu-item <?php echo $moduloActual === 'dashboard' ? 'active' : ''; ?>">
                 <i class="bi bi-grid-1x2-fill"></i>
@@ -22,7 +25,7 @@ $rol = $_SESSION['rol'];
             </a>
         <?php endif; ?>
 
-        <!-- Inventario Group -->
+        <!-- Grupo de Mantenimiento de Inventario (Solo Administrador) -->
         <?php if ($rol === 'Administrador'): ?>
             <div class="menu-header">Inventario</div>
             <a href="index.php?modulo=categorias" class="menu-item <?php echo $moduloActual === 'categorias' ? 'active' : ''; ?>">
@@ -39,7 +42,7 @@ $rol = $_SESSION['rol'];
             </a>
         <?php endif; ?>
 
-        <!-- Administración Group -->
+        <!-- Grupo de Administración y Clientes -->
         <div class="menu-header">Administración</div>
         <?php if ($rol === 'Administrador'): ?>
             <a href="index.php?modulo=usuarios" class="menu-item <?php echo $moduloActual === 'usuarios' ? 'active' : ''; ?>">
@@ -52,7 +55,7 @@ $rol = $_SESSION['rol'];
             <span>Clientes</span>
         </a>
 
-        <!-- Ventas Group -->
+        <!-- Grupo Operativo de Ventas y Cajas -->
         <div class="menu-header">Ventas & Caja</div>
         <a href="index.php?modulo=caja" class="menu-item <?php echo $moduloActual === 'caja' ? 'active' : ''; ?>">
             <i class="bi bi-cash-coin"></i>
@@ -67,7 +70,7 @@ $rol = $_SESSION['rol'];
             <span>Historial</span>
         </a>
 
-        <!-- Análisis Group -->
+        <!-- Grupo de Análisis y Control Administrativo (Solo Administrador) -->
         <?php if ($rol === 'Administrador'): ?>
             <div class="menu-header">Análisis & Control</div>
             <a href="index.php?modulo=control-cajas" class="menu-item <?php echo $moduloActual === 'control-cajas' ? 'active' : ''; ?>">

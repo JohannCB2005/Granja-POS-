@@ -1,25 +1,27 @@
 <?php
+// Restricción de seguridad: El acceso a reportes ejecutivos está limitado al rol de Administrador
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar la conexión activa a la Base de Datos
 require_once dirname(__DIR__) . '/config/conexion.php';
 $dbh = Conexion::singleton()->getConexion();
 
-// Total cumulative sales
+// 1. Obtener la facturación histórica total (Ventas activas)
 $stmt = $dbh->query("SELECT COALESCE(SUM(total), 0) as total FROM ventas WHERE estado = 1");
 $cumulativeSales = floatval($stmt->fetch()['total']);
 
-// Active products count
+// 2. Contar la cantidad de insumos registrados y activos en catálogo
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM insumos WHERE estado = 1");
 $activeProductsCount = intval($stmt->fetch()['count']);
 
-// Active customers count
+// 3. Contar la cantidad total de clientes registrados
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM clientes");
 $activeClientsCount = intval($stmt->fetch()['count']);
 
-// Top 5 most sold products list
+// 4. Consultar los 5 insumos con mayor demanda en base a la suma de cantidades vendidas
 $stmt = $dbh->query("SELECT i.nombre, SUM(dv.cantidad) as vendidos, i.precio_unitario, um.abreviatura as unidad
                      FROM detalle_ventas dv
                      INNER JOIN insumos i ON dv.id_insumo = i.id_insumo
@@ -31,7 +33,7 @@ $stmt = $dbh->query("SELECT i.nombre, SUM(dv.cantidad) as vendidos, i.precio_uni
                      LIMIT 5");
 $topProducts = $stmt->fetchAll();
 
-// Last 7 days chart data
+// 5. Configurar el gráfico histórico de los últimos 7 días de operación
 $ventasPorDia = [];
 $diasSemanaMap = [
     'Sunday' => 'Dom',
@@ -43,6 +45,7 @@ $diasSemanaMap = [
     'Saturday' => 'Sáb'
 ];
 
+// Rellenar arreglo con 0 ventas por defecto para evitar saltos en la línea de tiempo
 for ($i = 6; $i >= 0; $i--) {
     $timestamp = strtotime("-$i days");
     $fechaKey = date('Y-m-d', $timestamp);
@@ -56,12 +59,14 @@ for ($i = 6; $i >= 0; $i--) {
     ];
 }
 
+// Consultar ventas reales de los últimos 7 días
 $stmt = $dbh->query("SELECT DATE(fecha) as fecha_dia, SUM(total) as total_dia 
                      FROM ventas 
                      WHERE estado = 1 AND fecha >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
                      GROUP BY DATE(fecha)");
 $dbVentas = $stmt->fetchAll();
 
+// Sobrescribir ventas del día recuperadas de la base de datos
 foreach ($dbVentas as $row) {
     $f = $row['fecha_dia'];
     if (isset($ventasPorDia[$f])) {
@@ -72,7 +77,7 @@ $chartData = array_values($ventasPorDia);
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Reportes de Rendimiento</h4>
@@ -80,7 +85,7 @@ $chartData = array_values($ventasPorDia);
         </div>
     </div>
 
-    <!-- Statistics Grid -->
+    <!-- Rejilla de Estadísticas -->
     <div class="row g-4 mb-4">
         <div class="col-12 col-md-4">
             <div class="gp-card">
@@ -105,9 +110,9 @@ $chartData = array_values($ventasPorDia);
         </div>
     </div>
 
-    <!-- Main Reports Grid -->
+    <!-- Fila de Gráficos e Indicadores de Demanda -->
     <div class="row g-4">
-        <!-- Sales Trend -->
+        <!-- Tendencia de Ingresos -->
         <div class="col-12 col-lg-7">
             <div class="gp-card">
                 <h6 class="mb-4 fw-bold text-dark">Evolución de Ingresos (S/)</h6>
@@ -117,7 +122,7 @@ $chartData = array_values($ventasPorDia);
             </div>
         </div>
 
-        <!-- Top Products sold -->
+        <!-- Insumos Más Vendidos (Barras de progreso relativas) -->
         <div class="col-12 col-lg-5">
             <div class="gp-card h-100 d-flex flex-column">
                 <h6 class="mb-4 fw-bold text-dark">Top 5 Insumos Más Vendidos</h6>
@@ -129,7 +134,7 @@ $chartData = array_values($ventasPorDia);
                         </div>
                     <?php else: ?>
                         <?php 
-                        // Find max units sold to calculate relative progress bar percentages
+                        // Obtener el mayor número de ventas para establecer el 100% de la barra relativa
                         $maxSold = floatval($topProducts[0]['vendidos']);
                         foreach ($topProducts as $prod): 
                             $sold = floatval($prod['vendidos']);
@@ -158,6 +163,7 @@ $chartData = array_values($ventasPorDia);
     </div>
 </div>
 
+<!-- Lógica para renderizar Chart.js con degradado -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const rawChartData = <?php echo json_encode($chartData); ?>;
@@ -166,7 +172,7 @@ $chartData = array_values($ventasPorDia);
         
         const ctx = document.getElementById('reportsTrendChart').getContext('2d');
         
-        // Gradient fill for line chart
+        // Configurar un degradado verde translúcido debajo de la curva del gráfico
         const gradient = ctx.createLinearGradient(0, 0, 0, 320);
         gradient.addColorStop(0, 'rgba(21, 128, 61, 0.25)');
         gradient.addColorStop(1, 'rgba(21, 128, 61, 0.01)');

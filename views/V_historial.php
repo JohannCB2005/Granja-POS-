@@ -1,17 +1,21 @@
 <?php
+// Validar que exista una sesión activa
 if (!isset($_SESSION['id_usuario'])) {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar el modelo de Venta para listar el historial
 require_once dirname(__DIR__) . '/models/M_Venta.php';
 $modelVenta = M_Venta::singleton();
+
+// Restricción por rol: Si es vendedor, solo puede ver su propio historial, de lo contrario (admin) carga todo
 $id_vendedor = ($_SESSION['rol'] !== 'Administrador') ? $_SESSION['id_usuario'] : null;
 $ventas = $modelVenta->listar($id_vendedor);
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Historial de Ventas</h4>
@@ -19,9 +23,9 @@ $ventas = $modelVenta->listar($id_vendedor);
         </div>
     </div>
 
-    <!-- History Card -->
+    <!-- Panel de Historial -->
     <div class="gp-card">
-        <!-- Search and Filter bar -->
+        <!-- Barra de Búsqueda y Filtros en tiempo real -->
         <div class="row g-3 mb-3 align-items-end">
             <div class="col-12 col-md-3">
                 <label for="searchVentas" class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Buscar</label>
@@ -59,7 +63,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Tabla del Historial de Ventas -->
         <div class="table-responsive">
             <table class="table align-middle text-sm" id="tableVentas" style="font-size: 14px;">
                 <thead>
@@ -121,6 +125,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                                 </td>
                                 <td class="text-center">
                                     <div class="d-inline-flex gap-1 justify-content-center">
+                                        <!-- Botón Ver Detalles (Modal con AJAX) -->
                                         <button class="btn btn-link text-muted p-1 hover-text-primary view-details-btn" 
                                                 data-id="<?php echo $v['id_venta']; ?>"
                                                 data-codigo="V-<?php echo str_pad($v['id_venta'], 6, '0', STR_PAD_LEFT); ?>"
@@ -132,13 +137,14 @@ $ventas = $modelVenta->listar($id_vendedor);
                                                 title="Ver Detalle">
                                             <i class="bi bi-eye-fill"></i>
                                         </button>
-                                        <!-- Botón Imprimir Comprobante -->
+                                        <!-- Botón Imprimir Comprobante (Modal Iframe con formatos) -->
                                         <button class="btn btn-link text-muted p-1 print-ticket-btn"
                                                 data-id="<?php echo $v['id_venta']; ?>"
                                                 title="Imprimir Comprobante"
                                                 style="color: #6b7280;">
                                             <i class="bi bi-printer-fill"></i>
                                         </button>
+                                        <!-- Botón Anular (Retorna insumos al stock) -->
                                         <?php if ($v['estado'] == 1): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger cancel-sale-btn" 
                                                     data-id="<?php echo $v['id_venta']; ?>"
@@ -157,7 +163,7 @@ $ventas = $modelVenta->listar($id_vendedor);
     </div>
 </div>
 
-<!-- Modal: Detalle de Venta (Comprobante) -->
+<!-- Modal: Detalle de Venta (Comprobante Visual) -->
 <div class="modal fade" id="detalleVentaModal" tabindex="-1" aria-labelledby="detalleVentaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
@@ -166,7 +172,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
             <div class="modal-body p-4" id="ticketContent">
-                <!-- Meta Details -->
+                <!-- Encabezado de la Boleta -->
                 <div class="text-center mb-4 border-bottom pb-3">
                     <h5 class="fw-bold text-dark mb-1">Granja UNP</h5>
                     <p class="text-muted mb-2" style="font-size: 12px;">Gestión de Insumos y Ventas</p>
@@ -175,6 +181,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                     </div>
                 </div>
 
+                <!-- Detalles de la Transacción -->
                 <div class="row g-2 mb-4" style="font-size: 12.5px;">
                     <div class="col-6">
                         <span class="text-muted d-block">Fecha / Hora</span>
@@ -190,7 +197,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                     </div>
                 </div>
 
-                <!-- Products Table -->
+                <!-- Tabla de Productos/Insumos -->
                 <div class="border-top pt-3">
                     <h6 class="fw-bold text-dark mb-3" style="font-size: 13px;">Detalle de Insumos</h6>
                     <div class="table-responsive">
@@ -204,13 +211,13 @@ $ventas = $modelVenta->listar($id_vendedor);
                                 </tr>
                             </thead>
                             <tbody id="ticketItems">
-                                <!-- Dynamic rows loaded via AJAX -->
+                                <!-- Filas dinámicas cargadas por AJAX -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Totals Section -->
+                <!-- Sección de Importes y Desglose de IGV -->
                 <div class="border-top mt-3 pt-3 bg-light p-3 rounded-3" style="font-size: 13px;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-muted">Subtotal</span>
@@ -245,7 +252,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
 
-            <!-- Selector de formato -->
+            <!-- Selector dinámico de formato para impresión -->
             <div class="d-flex justify-content-center gap-2 py-2 bg-light border-bottom" style="flex-shrink: 0;">
                 <button class="btn btn-success btn-sm px-3 hist-format-btn active" data-format="80mm">
                     <i class="bi bi-receipt"></i> Ticket 80mm
@@ -258,7 +265,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                 </button>
             </div>
 
-            <!-- Visor iframe -->
+            <!-- Visor iframe para previsualizar el PDF dinámico -->
             <div class="modal-body p-0 position-relative" style="flex: 1 1 auto; overflow: hidden; background-color: #525659;">
                 <div id="histPrintSpinner" class="position-absolute top-50 start-50 translate-middle text-white d-flex flex-column align-items-center" style="z-index: 20;">
                     <div class="spinner-border mb-2" role="status"></div>
@@ -269,7 +276,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                 </iframe>
             </div>
 
-            <!-- Footer -->
+            <!-- Botones de Acción de Impresión -->
             <div class="modal-footer border-top bg-white py-2 px-4 d-flex justify-content-between" style="flex-shrink: 0; border-radius: 0 0 12px 12px;">
                 <button class="btn btn-success d-flex align-items-center gap-2 px-4" id="histPrintBtn">
                     <i class="bi bi-printer-fill"></i> Imprimir
@@ -280,7 +287,7 @@ $ventas = $modelVenta->listar($id_vendedor);
     </div>
 </div>
 
-<!-- JavaScript for History Filtering and AJAX Details -->
+<!-- JavaScript para Filtrado en Historial y Peticiones AJAX -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('searchVentas');
@@ -290,13 +297,13 @@ $ventas = $modelVenta->listar($id_vendedor);
         const dateHasta = document.getElementById('dateHasta');
         const rows = document.querySelectorAll('.venta-row');
 
-        // Real-time Filters
+        // 1. Filtrado dinámico multivariable en el frontend
         function filterVentas() {
             const query = searchInput.value.toLowerCase().trim();
             const status = statusFilter.value;
             const type = typeFilter.value;
-            const desde = dateDesde.value; // YYYY-MM-DD
-            const hasta = dateHasta.value; // YYYY-MM-DD
+            const desde = dateDesde.value; 
+            const hasta = dateHasta.value; 
 
             rows.forEach(row => {
                 const textMatch = row.innerText.toLowerCase().includes(query);
@@ -304,7 +311,7 @@ $ventas = $modelVenta->listar($id_vendedor);
                 const typeMatch = (type === 'all' || row.dataset.tipo === type);
                 
                 let dateMatch = true;
-                const rowDate = row.dataset.fecha; // YYYY-MM-DD
+                const rowDate = row.dataset.fecha; 
                 if (desde && rowDate < desde) {
                     dateMatch = false;
                 }
@@ -326,7 +333,7 @@ $ventas = $modelVenta->listar($id_vendedor);
         if (dateDesde) dateDesde.addEventListener('change', filterVentas);
         if (dateHasta) dateHasta.addEventListener('change', filterVentas);
 
-        // View Details Modal
+        // 2. Cargar detalles del comprobante por AJAX al abrir el modal
         const detailsModal = new bootstrap.Modal(document.getElementById('detalleVentaModal'));
         document.querySelectorAll('.view-details-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -378,7 +385,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             });
         });
 
-        // Cancel / Anular Sale
+        // 3. Confirmación y ejecución AJAX para anular una venta
         document.querySelectorAll('.cancel-sale-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.dataset.id;
@@ -429,7 +436,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             });
         });
 
-        // ---- PRINT TICKET MODAL ----
+        // 4. Lógica para impresión de tickets con Iframe reactivo
         let histCurrentId     = null;
         let histCurrentFormat = '80mm';
 
@@ -438,13 +445,13 @@ $ventas = $modelVenta->listar($id_vendedor);
         const histPrintSpinner= document.getElementById('histPrintSpinner');
         const histFormatBtns  = document.querySelectorAll('.hist-format-btn');
 
-        // Open modal when printer button is clicked
+        // Escuchar clics en el botón de impresión del historial para levantar el modal
         document.querySelectorAll('.print-ticket-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 histCurrentId     = btn.dataset.id;
                 histCurrentFormat = '80mm';
 
-                // Reset format buttons
+                // Restablecer estilos en los botones del selector de formatos
                 histFormatBtns.forEach(b => {
                     b.classList.remove('btn-success', 'active');
                     b.classList.add('btn-outline-success');
@@ -457,7 +464,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             });
         });
 
-        // Switch format
+        // Alternar el formato del comprobante (80mm, 58mm, A4) en caliente
         histFormatBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 histFormatBtns.forEach(b => {
@@ -471,6 +478,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             });
         });
 
+        // Carga dinámica del Iframe que renderiza la vista de ticket para la impresión limpia
         function loadHistIframe() {
             histPrintFrame.style.display = 'none';
             histPrintSpinner.style.display = 'flex';
@@ -483,7 +491,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             histPrintFrame.src = `views/V_ticket_print.php?id=${histCurrentId}&format=${histCurrentFormat}`;
         }
 
-        // Imprimir button
+        // Ejecutar foco e impresión de la ventana del iframe de impresión
         document.getElementById('histPrintBtn').addEventListener('click', () => {
             if (histPrintFrame.contentWindow) {
                 histPrintFrame.contentWindow.focus();
@@ -491,7 +499,7 @@ $ventas = $modelVenta->listar($id_vendedor);
             }
         });
 
-        // Reset iframe when modal closes
+        // Resetear iframe al cerrar modal
         document.getElementById('historialPrintModal').addEventListener('hidden.bs.modal', () => {
             histPrintFrame.src = '';
             histPrintFrame.style.display = 'none';

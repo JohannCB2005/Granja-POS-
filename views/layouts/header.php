@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Título de página dinámico -->
     <title><?php echo isset($title) ? $title : 'Granja POS'; ?></title>
-    <!-- Favicon -->
+    <!-- Icono oficial de la aplicación -->
     <link rel="icon" type="image/png" href="assets/logo_unp.png">
-    <!-- Google Fonts: Plus Jakarta Sans -->
+    <!-- Tipografía Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
+    <!-- Framework de Estilo Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+    <!-- Biblioteca de Iconos de Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- SweetAlert2 -->
+    <!-- SweetAlert2: Alertas Modales Personalizadas -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Chart.js -->
+    <!-- Chart.js: Generación Interactiva de Gráficos Financieros -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Estilos de Diseño Premium Custom (Aesthetics) -->
+    <!-- Diseño Estético Premium e Identidad de Marca (Aesthetics) -->
     <style>
         :root {
-            --gp-primary: #15803d; /* oklch(0.58 0.118 162) -> forest green */
+            --gp-primary: #15803d; /* Verde Bosque (Marca principal) */
             --gp-primary-hover: #166534;
             --gp-primary-light: #e6f4ea;
             --gp-background: #f8faf9;
@@ -43,7 +44,7 @@
             overflow-x: hidden;
         }
 
-        /* Sidebar styles */
+        /* Estilos de la barra lateral (Sidebar) */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -56,7 +57,6 @@
             transition: all 0.3s ease;
             border-right: 1px solid rgba(255,255,255,0.05);
             display: flex;
-            flex-col: column;
             flex-direction: column;
         }
 
@@ -65,7 +65,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            border-b: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .sidebar-brand-icon {
@@ -134,7 +134,7 @@
             font-size: 18px;
         }
 
-        /* Top Navbar */
+        /* Barra de navegación superior (Navbar) */
         .top-navbar {
             height: 64px;
             background-color: var(--gp-card);
@@ -151,7 +151,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Main Content container */
+        /* Contenedor principal de contenidos */
         .main-content {
             margin-left: 260px;
             width: calc(100% - 260px);
@@ -162,7 +162,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Collapsed state */
+        /* Estados del sidebar colapsado */
         .sidebar.collapsed {
             width: 72px;
         }
@@ -187,7 +187,7 @@
             width: calc(100% - 72px);
         }
 
-        /* Premium Cards */
+        /* Tarjetas de diseño premium */
         .gp-card {
             background-color: var(--gp-card);
             border: 1px solid var(--gp-border);
@@ -238,7 +238,7 @@
             font-weight: 600;
         }
 
-        /* Custom Scrollbars */
+        /* Barras de desplazamiento personalizadas */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -254,7 +254,7 @@
             background: #94a3b8;
         }
 
-        /* Mobile Responsive */
+        /* Reglas responsivas para pantallas móviles */
         @media (max-width: 991.98px) {
             .sidebar {
                 left: -260px;

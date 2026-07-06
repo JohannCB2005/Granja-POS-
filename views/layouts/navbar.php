@@ -1,4 +1,5 @@
 <?php
+// Generar iniciales del usuario logueado para mostrar en el avatar del navbar
 $iniciales = '';
 if (isset($_SESSION['nombres'])) {
     $parts = explode(' ', $_SESSION['nombres']);
@@ -13,11 +14,11 @@ $rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'Rol';
 ?>
 <header class="top-navbar">
     <div class="d-flex align-items-center gap-3">
-        <!-- Toggle button for desktop -->
+        <!-- Botón para contraer barra lateral (escritorio) -->
         <button class="btn btn-link text-dark p-0 d-none d-lg-inline-flex" id="toggle-sidebar" aria-label="Contraer barra lateral">
             <i class="bi bi-list fs-4"></i>
         </button>
-        <!-- Toggle button for mobile -->
+        <!-- Botón para expandir barra lateral (móvil) -->
         <button class="btn btn-link text-dark p-0 d-lg-none" id="mobile-toggle-sidebar" aria-label="Abrir menú">
             <i class="bi bi-list fs-4"></i>
         </button>
@@ -29,7 +30,7 @@ $rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'Rol';
     </div>
     
     <div class="d-flex align-items-center gap-3">
-        <!-- Role/View Indicator -->
+        <!-- Indicador visual del Rol de Usuario -->
         <div class="d-none d-md-flex align-items-center gap-2">
             <span class="text-muted" style="font-size: 12px; font-weight: 500;">Rol Activo:</span>
             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
@@ -37,7 +38,7 @@ $rolUsuario = isset($_SESSION['rol']) ? $_SESSION['rol'] : 'Rol';
             </span>
         </div>
 
-        <!-- User Profile Dropdown -->
+        <!-- Menú Desplegable de Perfil de Usuario -->
         <div class="dropdown">
             <button class="btn btn-link text-dark text-decoration-none dropdown-toggle d-flex align-items-center gap-2 p-1 border rounded-3 bg-light hover-bg-secondary" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="box-shadow: none;">
                 <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 12px;">

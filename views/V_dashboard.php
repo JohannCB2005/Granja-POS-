@@ -1,4 +1,5 @@
 <?php
+// Restricción de acceso: El Dashboard analítico es exclusivo para Administradores
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
@@ -7,23 +8,23 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
 require_once dirname(__DIR__) . '/config/conexion.php';
 $dbh = Conexion::singleton()->getConexion();
 
-// 1. Ventas Totales
+// 1. Calcular Ventas Totales acumuladas en el sistema (ventas completas activas)
 $stmt = $dbh->query("SELECT COALESCE(SUM(total), 0) as total FROM ventas WHERE estado = 1");
 $totalSales = floatval($stmt->fetch()['total']);
 
-// 2. Comprobantes
+// 2. Calcular número total de comprobantes emitidos válidos
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM ventas WHERE estado = 1");
 $completedCount = intval($stmt->fetch()['count']);
 
-// 3. Usuarios Activos
+// 3. Obtener el número de usuarios y personal activos en el sistema
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM usuarios u INNER JOIN personas p ON u.id_persona = p.id_persona WHERE p.estado = 1");
 $activeUsers = intval($stmt->fetch()['count']);
 
-// 4. Stock Bajo
+// 4. Contar la cantidad de insumos que tienen stock crítico igual o inferior a 20 unidades
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM insumos WHERE stock <= 20 AND estado = 1");
 $lowStockCount = intval($stmt->fetch()['count']);
 
-// 5. Historial Reciente (Últimas 5 ventas)
+// 5. Consultar las últimas 5 ventas para mostrar en el historial reciente
 $stmt = $dbh->query("SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.estado,
                             p.nombres_razon_social AS cliente_nombre 
                      FROM ventas v
@@ -32,7 +33,7 @@ $stmt = $dbh->query("SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.
                      ORDER BY v.fecha DESC LIMIT 5");
 $recentSales = $stmt->fetchAll();
 
-// 6. Analítica de Ventas (Últimos 7 días)
+// 6. Configurar analítica de ventas para el gráfico de barras/línea (Últimos 7 días)
 $ventasPorDia = [];
 $diasSemanaMap = [
     'Sunday' => 'Dom',
@@ -44,6 +45,7 @@ $diasSemanaMap = [
     'Saturday' => 'Sáb'
 ];
 
+// Inicializar el arreglo de los últimos 7 días con ventas en 0
 for ($i = 6; $i >= 0; $i--) {
     $timestamp = strtotime("-$i days");
     $fechaKey = date('Y-m-d', $timestamp);
@@ -57,12 +59,14 @@ for ($i = 6; $i >= 0; $i--) {
     ];
 }
 
+// Consultar las ventas agrupadas por día para los últimos 7 días en la DB
 $stmt = $dbh->query("SELECT DATE(fecha) as fecha_dia, SUM(total) as total_dia 
                      FROM ventas 
                      WHERE estado = 1 AND fecha >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
                      GROUP BY DATE(fecha)");
 $dbVentas = $stmt->fetchAll();
 
+// Sobrescribir los montos reales vendidos en los días correspondientes
 foreach ($dbVentas as $row) {
     $f = $row['fecha_dia'];
     if (isset($ventasPorDia[$f])) {
@@ -73,7 +77,7 @@ $chartData = array_values($ventasPorDia);
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Dashboard</h4>
@@ -81,9 +85,9 @@ $chartData = array_values($ventasPorDia);
         </div>
     </div>
 
-    <!-- Metrics Grid -->
+    <!-- Cuadrícula de Métricas Principales -->
     <div class="row g-4 mb-4">
-        <!-- Metric 1 -->
+        <!-- Métrica 1: Ventas Totales -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="gp-card d-flex flex-column h-full">
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -100,7 +104,7 @@ $chartData = array_values($ventasPorDia);
             </div>
         </div>
 
-        <!-- Metric 2 -->
+        <!-- Métrica 2: Cantidad de Comprobantes emitidos -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="gp-card d-flex flex-column h-full">
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -117,7 +121,7 @@ $chartData = array_values($ventasPorDia);
             </div>
         </div>
 
-        <!-- Metric 3 -->
+        <!-- Métrica 3: Usuarios Activos del sistema -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="gp-card d-flex flex-column h-full">
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -134,7 +138,7 @@ $chartData = array_values($ventasPorDia);
             </div>
         </div>
 
-        <!-- Metric 4 -->
+        <!-- Métrica 4: Alertas de Stock Bajo -->
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="gp-card d-flex flex-column h-full">
                 <div class="d-flex align-items-center justify-content-between mb-2">
@@ -157,9 +161,9 @@ $chartData = array_values($ventasPorDia);
         </div>
     </div>
 
-    <!-- Charts and Tables -->
+    <!-- Sección de Gráficos y Tablas Detalladas -->
     <div class="row g-4">
-        <!-- Sales Chart -->
+        <!-- Gráfico Analítico de Ventas (Chart.js) -->
         <div class="col-12 col-lg-8">
             <div class="gp-card">
                 <div class="d-flex align-items-center justify-content-between mb-4">
@@ -178,7 +182,7 @@ $chartData = array_values($ventasPorDia);
             </div>
         </div>
 
-        <!-- Recent Transactions -->
+        <!-- Listado de Ventas Recientes -->
         <div class="col-12 col-lg-4">
             <div class="gp-card h-100 d-flex flex-column">
                 <h6 class="mb-4 fw-bold text-dark">Ventas Recientes</h6>
@@ -220,13 +224,14 @@ $chartData = array_values($ventasPorDia);
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Inicializar datos para el gráfico
         const rawChartData = <?php echo json_encode($chartData); ?>;
         const labels = rawChartData.map(d => d.dia);
         const dataValues = rawChartData.map(d => d.ventas);
         
         const ctx = document.getElementById('salesChart').getContext('2d');
         
-        // Gradient fill for area chart
+        // Relleno de degradado lineal verde para el gráfico de línea/área
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(21, 128, 61, 0.3)');
         gradient.addColorStop(1, 'rgba(21, 128, 61, 0.01)');
@@ -234,6 +239,7 @@ $chartData = array_values($ventasPorDia);
         let chartType = 'line';
         let salesChart;
 
+        // Función para renderizar o actualizar dinámicamente el gráfico de Chart.js
         function buildChart(type) {
             if (salesChart) {
                 salesChart.destroy();
@@ -303,10 +309,10 @@ $chartData = array_values($ventasPorDia);
             salesChart = new Chart(ctx, config);
         }
 
-        // Initialize Line chart
+        // Generar gráfico lineal inicial
         buildChart('line');
 
-        // Toggle buttons
+        // Botones de alternancia para cambiar el tipo de visualización (Línea / Barras)
         const areaBtn = document.getElementById('chart-area-btn');
         const barBtn = document.getElementById('chart-bar-btn');
 

@@ -1,15 +1,24 @@
 <?php
+// Cargar dependencias para la transacción de ventas
 require_once dirname(__DIR__) . '/config/conexion.php';
 require_once dirname(__DIR__) . '/entities/Venta.php';
 
+/**
+ * Modelo para el procesamiento de Ventas
+ * Gestiona el registro masivo con transacciones (a nivel de procedimiento almacenado), listado y anulación de ventas.
+ */
 class M_Venta {
+    // Instancia Singleton
     private static $instancia = null;
+    // Conexión PDO
     private $conexion;
 
+    // Constructor privado
     private function __construct() {
         $this->conexion = Conexion::singleton()->getConexion();
     }
 
+    // Obtener la instancia única del modelo
     public static function singleton() {
         if (!isset(self::$instancia)) {
             $miclase = __CLASS__;
@@ -18,7 +27,13 @@ class M_Venta {
         return self::$instancia;
     }
 
-    // 1. Registrar Venta (Usa el PA con JSON)
+    /**
+     * Registra una venta completa llamando al procedimiento almacenado 'sp_registrar_venta'
+     * El procedimiento recibe el carrito en formato JSON para insertar las líneas de detalle
+     * y restar el stock correspondiente de forma segura y atómica.
+     * @param Venta $venta Entidad Venta completa con su lista de líneas de detalle
+     * @return int|bool Retorna el ID de la venta creada si fue exitoso, o False en caso de error
+     */
     public function registrar(Venta $venta) {
         try {
             $sql = "CALL sp_registrar_venta(?, ?, ?, ?, ?)";
@@ -37,6 +52,7 @@ class M_Venta {
             
             $jsonDetalles = json_encode($detallesArray);
 
+            // Ejecutar el SP con todos los parámetros
             $stmt->execute([
                 $venta->id_usuario,
                 $venta->id_cliente,
@@ -45,6 +61,7 @@ class M_Venta {
                 $jsonDetalles
             ]);
             
+            // Consultar la última venta insertada por el usuario para retornar su ID
             $stmtId = $this->conexion->prepare("SELECT id_venta FROM ventas WHERE id_usuario = ? ORDER BY id_venta DESC LIMIT 1");
             $stmtId->execute([$venta->id_usuario]);
             $row = $stmtId->fetch();
@@ -55,7 +72,12 @@ class M_Venta {
         }
     }
 
-    // 2. Anular Venta (Usa el PA para devolver el stock)
+    /**
+     * Anula una venta registrada en el sistema llamando a 'sp_anular_venta'
+     * Este procedimiento revierte el estado de la venta a inactivo y devuelve el stock al Kardex/Insumos.
+     * @param int $id_venta ID de la venta a anular
+     * @return bool True en caso de éxito, False si ocurre un error
+     */
     public function anular($id_venta) {
         try {
             $sql = "CALL sp_anular_venta(?)";
@@ -68,16 +90,21 @@ class M_Venta {
         }
     }
 
-    // 3. Listar Ventas (Historial general con cruce de datos)
+    /**
+     * Obtiene el listado histórico de ventas del sistema
+     * Si se pasa el ID de un vendedor, filtra únicamente sus ventas (Restricción del rol vendedor).
+     * @param int|null $id_usuario ID opcional del vendedor
+     * @return array Listado asociativo de ventas
+     */
     public function listar($id_usuario = null) {
         try {
             $sql = "SELECT v.id_venta, v.tipo_comprobante, v.fecha, v.total, v.estado,
                            u.username AS vendedor, 
                            CONCAT(p.nombres_razon_social, ' ', IFNULL(p.apellidos, '')) AS cliente, p.numero_documento 
-                    FROM ventas v
-                    INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
-                    INNER JOIN clientes c ON v.id_cliente = c.id_cliente
-                    INNER JOIN personas p ON c.id_persona = p.id_persona";
+                     FROM ventas v
+                     INNER JOIN usuarios u ON v.id_usuario = u.id_usuario
+                     INNER JOIN clientes c ON v.id_cliente = c.id_cliente
+                     INNER JOIN personas p ON c.id_persona = p.id_persona";
             
             if ($id_usuario !== null) {
                 $sql .= " WHERE v.id_usuario = ?";
@@ -98,7 +125,11 @@ class M_Venta {
         }
     }
 
-    // 4. Ver Detalle de una Venta (Para cuando le den clic a "Ver Boleta")
+    /**
+     * Obtiene todas las líneas de detalle (insumo, cantidad, precio, subtotal y unidad) de una venta específica
+     * @param int $id_venta ID de la venta a consultar
+     * @return array Listado de productos e importes de la venta
+     */
     public function obtenerDetallesPorVenta($id_venta) {
         try {
             $sql = "SELECT dv.cantidad, dv.precio_venta, dv.subtotal, 

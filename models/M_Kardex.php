@@ -1,14 +1,23 @@
 <?php
+// Requerir archivo de conexión centralizada
 require_once dirname(__DIR__) . '/config/conexion.php';
 
+/**
+ * Modelo para la gestión y control del Kardex (Movimientos de Inventario)
+ * Calcula y genera el historial de entradas, salidas y saldos en vivo de cada producto del inventario.
+ */
 class M_Kardex {
+    // Instancia Singleton
     private static $instancia = null;
+    // Conexión PDO
     private $conexion;
 
+    // Constructor privado
     private function __construct() {
         $this->conexion = Conexion::singleton()->getConexion();
     }
 
+    // Obtener la instancia única del modelo
     public static function singleton() {
         if (!isset(self::$instancia)) {
             self::$instancia = new self();
@@ -17,7 +26,8 @@ class M_Kardex {
     }
 
     /**
-     * Returns all active insumos with their category and unit for the product selector.
+     * Retorna todos los insumos activos con sus categorías y unidades para llenar el selector de productos en la UI del Kardex
+     * @return array Listado asociativo de productos activos
      */
     public function listarInsumos() {
         try {
@@ -37,22 +47,28 @@ class M_Kardex {
     }
 
     /**
-     * Returns the Kardex movement lines for a given insumo.
-     * Each line contains: fecha, tipo_doc, numero_doc, concepto,
+     * Obtiene el historial de movimientos de inventario (Kardex) para un insumo específico.
+     * Calcula la sumatoria histórica para reconstruir el saldo inicial del insumo hacia atrás.
+     * Cada fila resultante contiene: fecha, tipo_doc, numero_doc, concepto,
      *   entrada_cant, entrada_cu, entrada_ct,
      *   salida_cant, salida_cu, salida_ct,
      *   saldo_cant, saldo_cu, saldo_ct
-     *
-     * Movements come from detalle_ventas (salidas).
-     * For a complete system we'd also have compras/ajustes,
-     * but we simulate an initial "Saldo Inicial" based on current stock + sold quantities.
+     * 
+     * Los movimientos de salida se extraen de la tabla detalle_ventas.
+     * 
+     * @param int $id_insumo ID del insumo a analizar
+     * @param string|null $desde Fecha de inicio del filtro
+     * @param string|null $hasta Fecha de fin del filtro
+     * @param string $tipo Tipo de movimiento a filtrar ('entrada', 'salida', 'todos')
+     * @param string $busqueda Palabra clave para buscar por vendedor, cliente o código
+     * @return array Historial detallado del Kardex y estadísticas de stock
      */
     public function obtenerMovimientos($id_insumo, $desde = null, $hasta = null, $tipo = 'todos', $busqueda = '') {
         try {
-            // Build base params
+            // Inicializar parámetros de la consulta con el ID del insumo
             $params = [$id_insumo];
 
-            // Fecha filter for VENTAS
+            // Generar filtros de fecha dinámicos en las consultas
             $fechaWhere = '';
             if ($desde) {
                 $fechaWhere .= ' AND v.fecha >= ?';
@@ -63,7 +79,7 @@ class M_Kardex {
                 $params[] = $hasta . ' 23:59:59';
             }
 
-            // Search filter
+            // Generar filtro de búsqueda textual dinámico
             $busquedaWhere = '';
             if ($busqueda) {
                 $busquedaWhere = ' AND (v.id_venta LIKE ? OR p.nombres_razon_social LIKE ?)';
@@ -71,7 +87,7 @@ class M_Kardex {
                 $params[] = '%' . $busqueda . '%';
             }
 
-            // Get all sale movements (salidas) for the insumo
+            // 1. Consultar todos los movimientos de venta (salidas de stock) para este insumo
             $sql = "SELECT
                         v.fecha,
                         CASE v.tipo_comprobante
@@ -100,7 +116,7 @@ class M_Kardex {
             $stmt->execute($params);
             $salidas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Get insumo base info
+            // 2. Obtener los datos básicos de stock y unidad del insumo
             $infoStmt = $this->conexion->prepare(
                 "SELECT i.nombre, c.nombre AS categoria, u.abreviatura, i.precio_unitario, i.stock
                  FROM insumos i
@@ -113,17 +129,17 @@ class M_Kardex {
 
             if (!$insumo) return ['error' => 'Insumo no encontrado'];
 
-            // Calculate total sold quantity to derive initial stock
+            // 3. Reconstruir stock: Sumar todo lo vendido al stock actual para obtener el stock inicial (Apertura)
             $totalVendido = array_sum(array_column($salidas, 'salida_cant'));
             $stockActual = floatval($insumo['stock']);
             $stockInicial = $stockActual + $totalVendido;
             $precioUnit = floatval($insumo['precio_unitario']);
 
-            // Build Kardex rows with running balance
+            // 4. Construir las filas del Kardex con balances acumulativos
             $rows = [];
             $saldoCant = 0;
 
-            // Only show initial entry if not filtering by type = 'salida'
+            // Registrar fila de Saldo Inicial si no se está filtrando específicamente por salidas, búsquedas o fechas específicas
             if ($tipo !== 'salida' && !$desde && !$busqueda) {
                 $saldoCant = $stockInicial;
                 $rows[] = [
@@ -143,15 +159,13 @@ class M_Kardex {
                     'tipo_movimiento' => 'entrada',
                 ];
             } else {
-                // If filtering, we need to compute the saldo before the filtered period
+                // Si hay filtros activos, el saldo inicial se calcula igual para inicializar la cuenta acumulada
                 $saldoCant = $stockInicial;
-                // Subtract only the filtered salidas from initial to get pre-filter balance
-                // Actually just start from initial and let the loop handle it
             }
 
-            // Apply movements
+            // 5. Procesar e insertar las salidas (ventas) restándolas del acumulado
             foreach ($salidas as $mov) {
-                if ($tipo === 'entrada') continue; // Skip salidas if only showing entradas
+                if ($tipo === 'entrada') continue; // Omitir si se filtra solo por entradas
 
                 $cant = floatval($mov['salida_cant']);
                 $cu   = floatval($mov['costo_unit']);
@@ -175,8 +189,8 @@ class M_Kardex {
                 ];
             }
 
-            // Summary stats
-            $totalEntradaCant = $stockInicial; // All stock came in at some point
+            // Estadísticas resumidas finales del insumo
+            $totalEntradaCant = $stockInicial; 
             $totalSalidaCant  = $totalVendido;
 
             return [

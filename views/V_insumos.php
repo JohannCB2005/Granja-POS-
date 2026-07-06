@@ -1,9 +1,11 @@
 <?php
+// Restricción de acceso: Solo usuarios Administradores pueden gestionar el catálogo de insumos
 if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar modelos requeridos para las relaciones de categoría y unidades en los formularios
 require_once dirname(__DIR__) . '/models/M_Insumo.php';
 require_once dirname(__DIR__) . '/models/M_Categoria.php';
 require_once dirname(__DIR__) . '/models/M_Unidad.php';
@@ -21,7 +23,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
 ?>
 
 <div class="container-fluid px-0">
-    <!-- Page Header -->
+    <!-- Encabezado de Página -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h4 class="mb-1 fw-bold text-dark">Insumos</h4>
@@ -35,9 +37,9 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
         <?php endif; ?>
     </div>
 
-    <!-- Insumos Card -->
+    <!-- Panel de Insumos -->
     <div class="gp-card">
-        <!-- Search bar -->
+        <!-- Barra de Búsqueda -->
         <div class="row mb-3">
             <div class="col-12 col-md-4">
                 <div class="input-group">
@@ -49,7 +51,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
             </div>
         </div>
 
-        <!-- Table -->
+        <!-- Tabla del Inventario de Insumos -->
         <div class="table-responsive">
             <table class="table align-middle text-sm" id="tableInsumos" style="font-size: 14px;">
                 <thead>
@@ -75,6 +77,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                         </tr>
                     <?php else: ?>
                         <?php foreach ($insumos as $ins): ?>
+                            <!-- Resaltar visualmente si el insumo está bajo la cuota mínima de 20 unidades -->
                             <?php $lowStock = ($ins['stock'] <= 20); ?>
                             <tr class="border-bottom insumo-row">
                                 <td class="py-3">
@@ -105,6 +108,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                                 <?php if ($isAdmin): ?>
                                     <td class="text-end">
                                         <div class="d-inline-flex gap-1">
+                                            <!-- Mapear datos para edición rápida -->
                                             <button class="btn btn-link text-muted p-1 hover-text-primary edit-insumo-btn" 
                                                     data-id="<?php echo $ins['id_insumo']; ?>"
                                                     data-nombre="<?php echo htmlspecialchars($ins['nombre']); ?>"
@@ -242,10 +246,10 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
 </div>
 <?php endif; ?>
 
-<!-- JavaScript for CRUD Operations -->
+<!-- JavaScript para CRUD de Insumos -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Search functionality
+        // 1. Filtrado dinámico de insumos (búsqueda)
         const searchInput = document.getElementById('searchInsumos');
         const rows = document.querySelectorAll('.insumo-row');
 
@@ -264,7 +268,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
         }
 
         <?php if ($isAdmin): ?>
-        // Add Insumo Submit
+        // 2. Registro de Insumo por AJAX
         const formNuevo = document.getElementById('formNuevoInsumo');
         if (formNuevo) {
             formNuevo.addEventListener('submit', async (e) => {
@@ -305,7 +309,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
             });
         }
 
-        // Edit button click handler
+        // 3. Rellenar campos en el modal de Edición
         const editModal = new bootstrap.Modal(document.getElementById('editarInsumoModal'));
         const selectCat = document.getElementById('edit_categoria');
         const selectUni = document.getElementById('edit_unidad');
@@ -317,7 +321,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 document.getElementById('edit_precio').value = btn.dataset.precio;
                 document.getElementById('edit_stock').value = btn.dataset.stock;
                 
-                // Select matching option text/value
+                // Mapear los dropdown de categoría y unidades dinámicamente
                 Array.from(selectCat.options).forEach(opt => {
                     if (opt.text === btn.dataset.categoria) opt.selected = true;
                 });
@@ -329,7 +333,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
             });
         });
 
-        // Edit Form Submit
+        // 4. Guardar cambios del Insumo editado
         const formEditar = document.getElementById('formEditarInsumo');
         if (formEditar) {
             formEditar.addEventListener('submit', async (e) => {
@@ -372,7 +376,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
             });
         }
 
-        // Delete Button handler
+        // 5. Eliminar lógicamente un insumo del catálogo activo
         document.querySelectorAll('.delete-insumo-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id_insumo = btn.dataset.id;

@@ -1,7 +1,9 @@
 <?php
+// Validar el estado de la sesión e iniciarla si no existe una activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+// Generación del token CSRF para seguridad en el envío del formulario de acceso
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -29,7 +31,7 @@ if (empty($_SESSION['csrf_token'])) {
             background: #f0f4f0;
         }
 
-        /* ── Card wrapper ── */
+        /* ── Contenedor principal ── */
         .login-wrapper {
             display: flex;
             width: 900px;
@@ -41,7 +43,7 @@ if (empty($_SESSION['csrf_token'])) {
             background: #fff;
         }
 
-        /* ── Left panel ── */
+        /* ── Panel izquierdo (Héroe) ── */
         .login-hero {
             flex: 0 0 42%;
             position: relative;
@@ -87,7 +89,7 @@ if (empty($_SESSION['csrf_token'])) {
             line-height: 1.6;
         }
 
-        /* ── Right panel ── */
+        /* ── Panel derecho (Formulario) ── */
         .login-form-panel {
             flex: 1;
             display: flex;
@@ -209,7 +211,7 @@ if (empty($_SESSION['csrf_token'])) {
 
         .login-footer a:hover { text-decoration: underline; }
 
-        /* Responsive */
+        /* Diseño Responsivo */
         @media (max-width: 650px) {
             .login-hero { display: none; }
             .login-form-panel { padding: 36px 28px; }
@@ -219,7 +221,7 @@ if (empty($_SESSION['csrf_token'])) {
 <body>
 
 <div class="login-wrapper">
-    <!-- LEFT: Hero Image Panel -->
+    <!-- PANEL IZQUIERDO: Héroe Visual -->
     <div class="login-hero">
         <div class="hero-text">
             <h2>La forma moderna<br>de <span>gestionar tu granja</span></h2>
@@ -227,7 +229,7 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </div>
 
-    <!-- RIGHT: Form Panel -->
+    <!-- PANEL DERECHO: Formulario de Credenciales -->
     <div class="login-form-panel">
         <div class="brand-name">Granja <span>POS</span></div>
 
@@ -277,8 +279,9 @@ if (empty($_SESSION['csrf_token'])) {
     </div>
 </div>
 
+<!-- Lógica JavaScript para control visual y envío AJAX con CSRF token -->
 <script>
-    // Toggle password visibility
+    // Alternar visibilidad de la contraseña
     document.getElementById('togglePass').addEventListener('click', function () {
         const pass = document.getElementById('password');
         const icon = document.getElementById('togglePassIcon');
@@ -291,7 +294,7 @@ if (empty($_SESSION['csrf_token'])) {
         }
     });
 
-    // Login submit
+    // Envío del formulario de inicio de sesión
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
         e.preventDefault();
 

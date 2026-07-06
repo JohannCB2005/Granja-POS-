@@ -1,31 +1,37 @@
 <?php
+// Validar sesión activa del usuario
 if (!isset($_SESSION['id_usuario'])) {
     echo "<h1>Acceso denegado</h1>";
     exit;
 }
 
+// Cargar modelos requeridos para poblar la vista del punto de venta
 require_once dirname(__DIR__) . '/models/M_Insumo.php';
 require_once dirname(__DIR__) . '/models/M_Cliente.php';
 require_once dirname(__DIR__) . '/models/M_Categoria.php';
 require_once dirname(__DIR__) . '/models/M_Caja.php';
 
+// Listar insumos activos en catálogo
 $modelInsumo = M_Insumo::singleton();
-$insumos = $modelInsumo->listar(); // Array of active insumos with category, unit, stock, etc.
+$insumos = $modelInsumo->listar();
 
+// Listar clientes registrados
 $modelCliente = M_Cliente::singleton();
 $clientes = $modelCliente->listarClientes();
 
+// Listar categorías activas para los filtros rápidos
 $modelCat = M_Categoria::singleton();
 $categorias = $modelCat->listar();
 
+// Verificar si el usuario actual tiene una apertura de caja activa
 $modelCaja = M_Caja::singleton();
 $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 ?>
 
 <style>
-    /* ── Autocomplete dropdown ── */
+    /* ── Menú desplegable de autocompletado de clientes ── */
     #clientAutocompleteDropdown {
-        display: none;  /* hidden by default, JS sets display:block */
+        display: none;
         position: absolute;
         left: 0;
         right: 0;
@@ -109,7 +115,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         background-color: #f0fdf4;
     }
 
-    /* Modal tab headers */
     #clientTabs .nav-link {
         color: #6b7280;
         border-bottom: 3px solid transparent;
@@ -122,18 +127,15 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         font-weight: 600;
     }
 
-    /* Clear selection button */
     #clearClientSelectionBtn:hover {
         color: #dc3545 !important;
         background-color: transparent !important;
     }
 
-    /* Ensure autocomplete parent has position relative */
     .client-autocomplete-wrapper {
         position: relative;
     }
 
-    /* Style for disabled state of primary buttons to match professional grey theme instead of inline light green */
     .gp-btn-primary:disabled {
         background-color: #e5e7eb !important;
         border-color: #e5e7eb !important;
@@ -143,6 +145,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 </style>
 
 <div class="container-fluid px-0">
+    <!-- Overlay de Caja Cerrada: Bloquea la navegación e impide ventas si la caja no está abierta -->
     <?php if (!$cajaAbierta): ?>
     <div class="position-fixed w-100 h-100 top-0 start-0 d-flex flex-column align-items-center justify-content-center" style="z-index: 9999; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);">
         <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 4rem;"></i>
@@ -153,7 +156,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
     <style> body { overflow: hidden; } </style>
     <?php endif; ?>
 
-    <!-- Top Row: Client Data -->
+    <!-- Fila Superior: Datos de Cliente e Identidad Fiscal -->
     <div class="row mb-3">
         <div class="col-12">
             <div class="gp-card p-3" style="border-radius: 12px;">
@@ -184,13 +187,13 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                                 </button>
                             </div>
                             
-                            <!-- Custom Autocomplete Dropdown List -->
+                            <!-- Dropdown dinámico para el autocompletado en tiempo real -->
                             <div id="clientAutocompleteDropdown">
-                                <!-- Dynamic options loaded here -->
+                                <!-- Opciones cargadas por JS -->
                             </div>
                         </div>
                         
-                        <!-- Selected Client Badge -->
+                        <!-- Etiqueta del Cliente Seleccionado -->
                         <div id="selectedClientBadge" class="mt-2 d-none" style="font-size: 13px;">
                             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2.5 py-1.5 fw-semibold d-inline-flex align-items-center gap-1">
                                 <i class="bi bi-person-check-fill"></i> 
@@ -204,10 +207,9 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
     </div>
 
     <div class="row g-3">
-        <!-- Catalog column -->
+        <!-- Columna del Catálogo de Insumos -->
         <div class="col-12 col-lg-7 col-xl-8">
             <div class="gp-card h-100 d-flex flex-column" style="min-height: 600px;">
-                <!-- Header / Search -->
                 <div class="mb-4">
                     <h4 class="fw-bold text-dark mb-1">Nueva Venta</h4>
                     <p class="text-muted mb-4" style="font-size: 13.5px;">Selecciona los insumos para agregarlos al carrito.</p>
@@ -220,7 +222,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                             <input type="text" class="form-control border-start-0 ps-0 text-sm" id="searchCatalog" placeholder="Buscar insumos..." aria-label="Buscar" aria-describedby="search-pos-addon" style="box-shadow: none;">
                         </div>
                         
-                        <!-- Category Filter Pills -->
+                        <!-- Píldoras de Filtro por Categorías -->
                         <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0" style="flex: 1; white-space: nowrap; scrollbar-width: none;" id="categoryFilterPills">
                             <style>#categoryFilterPills::-webkit-scrollbar { display: none; }</style>
                             <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold cat-filter-btn active" data-cat="all">Todos</button>
@@ -233,7 +235,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     </div>
                 </div>
 
-                <!-- Products Grid -->
+                <!-- Cuadrícula de Tarjetas de Productos -->
                 <div class="flex-grow-1 overflow-auto pe-1" style="max-height: 480px;" id="catalogGrid">
                     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
                         <?php foreach ($insumos as $ins): ?>
@@ -242,7 +244,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                                      data-nombre="<?php echo htmlspecialchars(strtolower($ins['nombre'])); ?>"
                                      data-categoria="<?php echo htmlspecialchars($ins['categoria']); ?>">
                                     <div class="card h-100 border border-light shadow-sm hover-shadow-md transition-all position-relative" style="border-radius: 12px; overflow: hidden;">
-                                        <!-- Stock indicator badge -->
+                                        <!-- Alerta de Stock Mínimo -->
                                         <div class="position-absolute top-0 end-0 m-2">
                                             <?php if ($ins['stock'] <= 0): ?>
                                                 <span class="badge bg-danger rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Agotado</span>
@@ -286,7 +288,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             </div>
         </div>
 
-        <!-- Cart column -->
+        <!-- Columna del Carrito de Compras -->
         <div class="col-12 col-lg-5 col-xl-4">
             <div class="gp-card h-100 d-flex flex-column justify-content-between" style="min-height: 600px;">
                 <div>
@@ -298,9 +300,8 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         <span class="badge bg-success rounded-pill px-2" id="cartItemCountBadge">0 items</span>
                     </div>
 
-                    <!-- Cart List -->
+                    <!-- Listado Dinámico de Insumos Agregados -->
                     <div class="overflow-auto mb-3 pe-1" style="max-height: 250px; min-height: 180px;" id="cartList">
-                        <!-- Dynamic items loaded here -->
                         <div class="text-center py-5 text-muted" id="emptyCartMessage">
                             <i class="bi bi-cart fs-2 mb-2 d-block"></i>
                             <p style="font-size: 13px;" class="mb-1">El carrito está vacío</p>
@@ -309,9 +310,8 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     </div>
                 </div>
 
-                <!-- Footer Summary -->
+                <!-- Resumen Financiero Desglosado con IGV -->
                 <div>
-                    <!-- Totals -->
                     <div class="bg-light p-3 rounded-3 mb-3" style="font-size: 13px;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted">Subtotal</span>
@@ -327,7 +327,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         </div>
                     </div>
 
-                    <!-- Action Button -->
+                    <!-- Confirmar Venta -->
                     <button class="gp-btn-primary w-100 border-0 py-2.5 d-flex align-items-center justify-content-center gap-2" id="submitSaleBtn" disabled>
                         <span>Registrar Venta</span>
                     </button>
@@ -336,7 +336,8 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         </div>
     </div>
 </div>
-<!-- Modal: Nuevo Cliente -->
+
+<!-- Modal: Registro de Nuevo Cliente en caliente -->
 <div class="modal fade" id="nuevoClienteModal" tabindex="-1" aria-labelledby="nuevoClienteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
@@ -345,7 +346,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- Hidden inputs to maintain compatibility and prevent JS/backend errors -->
+                <!-- Inputs ocultos para compatibilidad de base de datos -->
                 <input type="hidden" id="modalNombreComercial" value="">
                 <input type="hidden" id="modalDiasCredito" value="0">
                 <input type="hidden" id="modalCodInterno" value="">
@@ -354,7 +355,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 <input type="hidden" id="modalDireccion" value="">
                 <input type="checkbox" id="modalAgenteRetencion" class="d-none">
 
-                <!-- Form fields -->
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
                         <label class="form-label text-muted fw-semibold mb-1">Tipo Doc. Identidad <span class="text-danger">*</span></label>
@@ -399,7 +399,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
     </div>
 </div>
 
-  <!-- Modal: Imprimir Comprobante -->
+<!-- Modal: Generación Automática e Impresión de Ticket post-venta -->
 <div class="modal fade" id="imprimirTicketModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; height: 92vh;">
@@ -411,7 +411,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;" onclick="window.location.reload()"></button>
             </div>
 
-            <!-- Selector de formato -->
+            <!-- Selector de formato de papel -->
             <div class="d-flex justify-content-center gap-2 py-2 bg-light border-bottom" style="flex-shrink: 0;">
                 <button class="btn btn-success btn-sm px-3 ticket-format-btn active" data-format="80mm">
                     <i class="bi bi-receipt"></i> Ticket 80mm
@@ -424,14 +424,12 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 </button>
             </div>
 
-            <!-- Visor iframe (ocupa todo el espacio restante) -->
+            <!-- Visor Iframe para previsualizar ticket -->
             <div class="modal-body p-0 position-relative" style="flex: 1 1 auto; overflow: hidden; background-color: #525659;">
-                <!-- Spinner centrado -->
                 <div id="pdfLoadingSpinner" class="position-absolute top-50 start-50 translate-middle text-white d-flex flex-column align-items-center" style="z-index: 20;">
                     <div class="spinner-border mb-2" role="status"></div>
                     <span style="font-size: 14px;">Generando comprobante...</span>
                 </div>
-                <!-- Iframe de vista previa -->
                 <iframe
                     id="pdfPreviewFrame"
                     src=""
@@ -439,7 +437,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 </iframe>
             </div>
 
-            <!-- Footer acciones -->
+            <!-- Botones de Acción -->
             <div class="modal-footer border-top bg-white py-2 px-4 d-flex justify-content-between align-items-center" style="flex-shrink: 0; border-radius: 0 0 12px 12px;">
                 <button class="btn btn-success d-flex align-items-center gap-2 px-4" onclick="printCurrentIframe()">
                     <i class="bi bi-printer-fill"></i> Imprimir
@@ -457,15 +455,16 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
     </div>
 </div>
 
+<!-- Lógica JS: Manejo de Carrito, Autocompletado y API de Identificación Sunat/Reniec -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // POS Shopping Cart State
+        // Estado local del carrito
         let cart = [];
 
-        // Dynamic Client List (Loaded from database)
+        // Matriz de clientes para búsquedas inmediatas en memoria
         const clientsList = <?php echo json_encode($clientes); ?>;
 
-        // DOM elements
+        // Elementos DOM del catálogo
         const searchInput = document.getElementById('searchCatalog');
         const catFilterBtns = document.querySelectorAll('.cat-filter-btn');
         const productCards = document.querySelectorAll('.product-card');
@@ -474,7 +473,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         const clearCartBtn = document.getElementById('clearCart');
         const submitSaleBtn = document.getElementById('submitSaleBtn');
         
-        // Client Input & Search elements (Autocomplete + Modal)
+        // Elementos del Autocompletado de Clientes
         const clientAutocompleteInput = document.getElementById('clientAutocompleteInput');
         const clearClientSelectionBtn = document.getElementById('clearClientSelectionBtn');
         const clientAutocompleteDropdown = document.getElementById('clientAutocompleteDropdown');
@@ -482,15 +481,15 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         const selectedClientBadge = document.getElementById('selectedClientBadge');
         const selectedClientText = document.getElementById('selectedClientText');
 
-        // Document type select element
+        // Tipo de Comprobante
         const docTypeSelect = document.getElementById('docTypeSelect');
 
-        // Summary elements
+        // Elementos de importes del resumen
         const summarySubtotal = document.getElementById('summarySubtotal');
         const summaryIgv = document.getElementById('summaryIgv');
         const summaryTotal = document.getElementById('summaryTotal');
 
-        // Modal Elements
+        // Elementos del formulario de registro rápido
         const modalTipoDoc = document.getElementById('modalTipoDoc');
         const modalNumDoc = document.getElementById('modalNumDoc');
         const modalSearchApiBtn = document.getElementById('modalSearchApiBtn');
@@ -507,7 +506,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         const modalTelefono = document.getElementById('modalTelefono');
         const modalSaveClientBtn = document.getElementById('modalSaveClientBtn');
 
-        // Modal Tab Navigation visual highlights
+        // Navegación de pestañas en modal
         const tabButtons = document.querySelectorAll('#clientTabs button');
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -520,22 +519,21 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         });
 
-        // Update button text in modal based on Doc Type select
+        // Cambiar etiquetas dinámicamente según el documento seleccionado en el modal
         modalTipoDoc.addEventListener('change', () => {
             if (modalTipoDoc.value === '1') {
                 modalSearchApiBtnText.innerText = 'RENIEC';
-                modalTipoCliente.value = '1'; // Natural
+                modalTipoCliente.value = '1';
             } else {
                 modalSearchApiBtnText.innerText = 'SUNAT';
-                modalTipoCliente.value = '2'; // Jurídica
+                modalTipoCliente.value = '2';
             }
         });
 
-        // Toggle Receipt Document Mode
+        // Alternar el tipo de documento del comprobante (Factura requiere obligatoriamente RUC)
         function updateDocumentMode() {
             const docType = docTypeSelect.value;
             
-            // Clear current selection and restore default
             if (docType === '1' || docType === '3') {
                 cartClientId.value = '1';
                 selectedClientText.innerText = 'Público General';
@@ -551,6 +549,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             validateSubmitBtn();
         }
 
+        // Cambiar marcador de posición según DNI o RUC
         function updateInputConstraints() {
             if (!docTypeSelect || !clientAutocompleteInput) return;
             const docType = docTypeSelect.value;
@@ -567,15 +566,14 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             updateInputConstraints();
         }
 
-        // Autocomplete Filter & Render function
+        // Filtrar y renderizar el desplegable de autocompletado de clientes
         function showAutocompleteDropdown() {
             const rawVal = clientAutocompleteInput.value;
             const val = rawVal.toLowerCase().trim();
             
-            // If empty, show first 8 clients as suggestion list
             let matches = [];
             if (val === '') {
-                matches = clientsList.slice(0, 8);
+                matches = clientsList.slice(0, 8); // Sugerir los primeros 8 por defecto
             } else {
                 matches = clientsList.filter(c => 
                     c.numero_documento.toLowerCase().includes(val) || 
@@ -597,7 +595,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         </button>
                     `;
                 });
-                // Always offer option to create new one too
                 if (val !== '') {
                     dropdownHtml += `<div class="client-dropdown-divider"></div>`;
                     dropdownHtml += `
@@ -617,13 +614,12 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             }
 
             clientAutocompleteDropdown.innerHTML = dropdownHtml;
-            // Show using our custom CSS class instead of Bootstrap's dropdown
             clientAutocompleteDropdown.classList.add('open');
 
-            // Attach click listeners to matching client options
+            // Adjuntar oyentes de eventos a las coincidencias sugeridas
             clientAutocompleteDropdown.querySelectorAll('.client-opt').forEach(opt => {
                 opt.addEventListener('mousedown', (e) => {
-                    e.preventDefault(); // prevent blur before click fires
+                    e.preventDefault(); // Impedir que el desenfoque cierre el menú antes de seleccionar
                     const id = opt.dataset.id;
                     const doc = opt.dataset.doc;
                     const name = opt.dataset.name;
@@ -631,7 +627,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 });
             });
 
-            // Attach click listener to "Crear cliente" button
+            // Opción de creación rápida
             const createBtn = document.getElementById('createClientDropdownBtn');
             if (createBtn) {
                 createBtn.addEventListener('mousedown', (e) => {
@@ -645,7 +641,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             clientAutocompleteDropdown.classList.remove('open');
         }
 
-        // Set selected client state
+        // Fijar el cliente seleccionado en el estado global de la venta
         function selectClient(id, doc, name) {
             cartClientId.value = id;
             clientAutocompleteInput.value = `${doc} - ${name}`;
@@ -655,7 +651,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             validateSubmitBtn();
         }
 
-        // Clear Selection
+        // Limpiar selección de cliente
         clearClientSelectionBtn.addEventListener('click', () => {
             const docType = docTypeSelect.value;
             if (docType === '1' || docType === '3') {
@@ -670,16 +666,13 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             validateSubmitBtn();
         });
 
-        // Trigger autocomplete on input or focus
+        // Filtrar entrada numérica o caracteres de texto
         clientAutocompleteInput.addEventListener('input', () => {
             let val = clientAutocompleteInput.value;
             const docType = docTypeSelect.value;
-            
-            // Check if there are any alphabetical characters to distinguish between name search and document number search
             const hasLetters = /[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]/.test(val);
             
             if (!hasLetters) {
-                // Strip non-digits
                 val = val.replace(/\D/g, '');
                 const maxLen = (docType === '1' || docType === '3') ? 8 : 11;
                 if (val.length > maxLen) {
@@ -687,7 +680,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 }
                 clientAutocompleteInput.value = val;
             } else {
-                // Allow letters, spaces, accents, ñ, dots, commas, dashes, and ampersands
                 val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.,\-&]/g, '');
                 clientAutocompleteInput.value = val;
             }
@@ -695,16 +687,14 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         });
         clientAutocompleteInput.addEventListener('focus', showAutocompleteDropdown);
 
-        // Close dropdown on blur (with small delay so mousedown clicks register first)
         clientAutocompleteInput.addEventListener('blur', () => {
             setTimeout(hideAutocompleteDropdown, 150);
         });
 
-        // Open quick create modal pre-populating fields
+        // Lanzar y configurar modal de creación rápida
         function openQuickCreateModal(typedVal) {
             hideAutocompleteDropdown();
             
-            // Clean modal fields
             modalNombre.value = '';
             modalNombreComercial.value = '';
             modalDiasCredito.value = '0';
@@ -714,25 +704,24 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             modalDireccion.value = '';
             modalTelefono.value = '';
 
-            const num = typedVal.replace(/\D/g, ''); // Numbers only
+            const num = typedVal.replace(/\D/g, '');
             modalNumDoc.value = num;
 
-            // Auto-detect Document Type and Client Type
+            // Detección automática por la longitud de dígitos
             if (num.length === 11) {
-                modalTipoDoc.value = '2'; // RUC
+                modalTipoDoc.value = '2';
                 modalSearchApiBtnText.innerText = 'SUNAT';
-                modalTipoCliente.value = '2'; // Jurídica by default
+                modalTipoCliente.value = '2';
             } else if (num.length === 8) {
-                modalTipoDoc.value = '1'; // DNI
+                modalTipoDoc.value = '1';
                 modalSearchApiBtnText.innerText = 'RENIEC';
-                modalTipoCliente.value = '1'; // Natural
+                modalTipoCliente.value = '1';
             } else {
-                modalTipoDoc.value = '1'; // Default DNI
+                modalTipoDoc.value = '1';
                 modalSearchApiBtnText.innerText = 'RENIEC';
                 modalTipoCliente.value = '1';
             }
 
-            // Reset tab highlights
             tabButtons.forEach((b, idx) => {
                 if (idx === 0) {
                     b.classList.add('active', 'text-success', 'border-bottom', 'border-3', 'border-success');
@@ -743,50 +732,33 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 }
             });
             
-            // Activate first tab pane
             const triggerEl = document.querySelector('#clientTabs button[data-bs-target="#tab-datos"]');
             if (triggerEl) {
                 const tab = new bootstrap.Tab(triggerEl);
                 tab.show();
             }
 
-            // Open Modal
             const createModal = new bootstrap.Modal(document.getElementById('nuevoClienteModal'));
             createModal.show();
         }
 
-        // Modal API Search Button event handler
+        // Consultar API RENIEC/SUNAT a través del backend
         modalSearchApiBtn.addEventListener('click', async () => {
             const docNum = modalNumDoc.value.trim();
             const docType = modalTipoDoc.value;
 
             if (docNum === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Número requerido',
-                    text: 'Debe ingresar el número de documento para realizar la consulta.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'warning', title: 'Número requerido', text: 'Debe ingresar el número de documento para realizar la consulta.', confirmButtonColor: '#15803d' });
                 return;
             }
 
             if (docType === '1' && docNum.length !== 8) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'DNI Inválido',
-                    text: 'El DNI debe tener exactamente 8 dígitos.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'warning', title: 'DNI Inválido', text: 'El DNI debe tener exactamente 8 dígitos.', confirmButtonColor: '#15803d' });
                 return;
             }
 
             if (docType === '2' && docNum.length !== 11) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'RUC Inválido',
-                    text: 'El RUC debe tener exactamente 11 dígitos.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'warning', title: 'RUC Inválido', text: 'El RUC debe tener exactamente 11 dígitos.', confirmButtonColor: '#15803d' });
                 return;
             }
 
@@ -807,35 +779,19 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     modalDireccion.value = res.data.direccion;
                     modalTipoCliente.value = res.data.tipo_cliente;
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Datos Obtenidos!',
-                        text: 'Los datos del cliente se cargaron exitosamente.',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
+                    Swal.fire({ icon: 'success', title: '¡Datos Obtenidos!', text: 'Los datos del cliente se cargaron exitosamente.', showConfirmButton: false, timer: 1500 });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de consulta',
-                        text: res.mensaje,
-                        confirmButtonColor: '#15803d'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error de consulta', text: res.mensaje, confirmButtonColor: '#15803d' });
                 }
             } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de red',
-                    text: 'No se pudo conectar con el servidor para la consulta de API.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo conectar con el servidor para la consulta de API.', confirmButtonColor: '#15803d' });
             } finally {
                 modalSearchApiBtn.disabled = false;
                 modalSearchApiBtnText.innerText = originalText;
             }
         });
 
-        // Modal Save Button event handler
+        // Guardar el nuevo cliente registrado desde el modal de la venta
         modalSaveClientBtn.addEventListener('click', async () => {
             const tipo_documento = parseInt(modalTipoDoc.value);
             const numero_documento = modalNumDoc.value.trim();
@@ -845,12 +801,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             const tipo_cliente = parseInt(modalTipoCliente.value);
 
             if (numero_documento === '' || nombres_razon_social === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Campos obligatorios',
-                    text: 'Debe ingresar el Número de documento y el Nombre / Razón Social.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'warning', title: 'Campos obligatorios', text: 'Debe ingresar el Número de documento y el Nombre / Razón Social.', confirmButtonColor: '#15803d' });
                 return;
             }
 
@@ -864,7 +815,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         tipo_documento,
                         numero_documento,
                         nombres_razon_social,
-                        apellidos: '', // Concatenated by RENIEC endpoint anyway
+                        apellidos: '',
                         direccion,
                         telefono,
                         tipo_cliente
@@ -873,48 +824,31 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 const res = await response.json();
 
                 if (res.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Cliente Guardado!',
-                        text: res.mensaje,
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
+                    Swal.fire({ icon: 'success', title: '¡Cliente Guardado!', text: res.mensaje, showConfirmButton: false, timer: 1500 });
 
-                    // Add new client to the local array dynamically
+                    // Agregar al listado en memoria
                     const newCli = res.cliente;
                     clientsList.push(newCli);
 
-                    // Auto select the newly created client
+                    // Seleccionarlo automáticamente
                     selectClient(newCli.id_cliente, newCli.numero_documento, `${newCli.nombres_razon_social} ${newCli.apellidos || ''}`);
 
-                    // Hide modal
                     const modalEl = document.getElementById('nuevoClienteModal');
                     const modalInstance = bootstrap.Modal.getInstance(modalEl);
                     if (modalInstance) {
                         modalInstance.hide();
                     }
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error al registrar',
-                        text: res.mensaje,
-                        confirmButtonColor: '#15803d'
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error al registrar', text: res.mensaje, confirmButtonColor: '#15803d' });
                 }
             } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error de red',
-                    text: 'No se pudo contactar al servidor para registrar el cliente.',
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo contactar al servidor para registrar el cliente.', confirmButtonColor: '#15803d' });
             } finally {
                 modalSaveClientBtn.disabled = false;
             }
         });
 
-        // Local Filter for Catalog
+        // Filtrado local del Catálogo de Productos
         let currentCategory = 'all';
         function filterCatalog() {
             const query = searchInput.value.toLowerCase().trim();
@@ -951,7 +885,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         });
 
-        // Add to Cart
+        // Agregar artículo al carrito y evaluar stock en vivo
         document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = parseInt(btn.dataset.id);
@@ -960,16 +894,10 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 const stock = parseFloat(btn.dataset.stock);
                 const unidad = btn.dataset.unidad;
 
-                // Check if already in cart
                 const existing = cart.find(item => item.id_insumo === id);
                 if (existing) {
                     if (existing.cantidad + 1 > stock) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Stock Insuficiente',
-                            text: `Solo hay ${stock} unidades disponibles de este insumo.`,
-                            confirmButtonColor: '#15803d'
-                        });
+                        Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `Solo hay ${stock} unidades disponibles de este insumo.`, confirmButtonColor: '#15803d' });
                         return;
                     }
                     existing.cantidad += 1;
@@ -990,7 +918,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         });
 
-        // Clear Cart
         if (clearCartBtn) {
             clearCartBtn.addEventListener('click', () => {
                 cart = [];
@@ -998,7 +925,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         }
 
-        // Increment/Decrement/Change quantity
+        // Modificar cantidad en línea en la vista del carrito
         function updateQuantity(id, newQty) {
             const item = cart.find(i => i.id_insumo === id);
             if (!item) return;
@@ -1006,12 +933,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             if (newQty <= 0) {
                 cart = cart.filter(i => i.id_insumo !== id);
             } else if (newQty > item.stock) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Stock Insuficiente',
-                    text: `El stock disponible es de ${item.stock} ${item.unidad}.`,
-                    confirmButtonColor: '#15803d'
-                });
+                Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `El stock disponible es de ${item.stock} ${item.unidad}.`, confirmButtonColor: '#15803d' });
                 item.cantidad = item.stock;
                 item.subtotal = item.cantidad * item.precio;
             } else {
@@ -1021,14 +943,14 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             renderCart();
         }
 
-        // Validate complete checkout state
+        // Validar si la venta cumple las condiciones mínimas para ser cobrada
         function validateSubmitBtn() {
             const hasItems = cart.length > 0;
             const hasClient = cartClientId.value && cartClientId.value !== '';
             submitSaleBtn.disabled = !(hasItems && hasClient);
         }
 
-        // Render Cart UI
+        // Dibujar el estado actual del Carrito en el HTML
         function renderCart() {
             const cartItemCountBadge = document.getElementById('cartItemCountBadge');
             if (cartItemCountBadge) {
@@ -1046,7 +968,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 return;
             }
 
-            // Remove empty message if present
             if (document.getElementById('emptyCartMessage')) {
                 cartList.innerHTML = '';
             }
@@ -1086,7 +1007,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             cartHtml += '</div>';
             cartList.innerHTML = cartHtml;
 
-            // Calculations: Total is final, subtotal is total / 1.18, igv is total - subtotal
+            // Desglose tributario (Total es precio con IGV incluido, subtotal = total/1.18)
             const subtotalVal = totalGeneral / 1.18;
             const igvVal = totalGeneral - subtotalVal;
 
@@ -1096,7 +1017,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             validateSubmitBtn();
         }
 
-        // Global functions for inline events
+        // Exponer funciones visuales del carrito al ámbito global
         window.posDecrease = (id) => {
             const item = cart.find(i => i.id_insumo === id);
             if (item) updateQuantity(id, item.cantidad - 1);
@@ -1118,13 +1039,12 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             renderCart();
         };
 
-        // Submit Sale
+        // Enviar Transacción Final a base de datos por AJAX
         if (submitSaleBtn) {
             submitSaleBtn.addEventListener('click', async () => {
                 const id_cliente = parseInt(cartClientId.value);
                 const tipo_comprobante = parseInt(docTypeSelect.value);
                 
-                // Read calculated total
                 let total = 0;
                 cart.forEach(item => total += item.subtotal);
 
@@ -1140,7 +1060,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     }))
                 };
 
-                // Confirm Alert
                 let docLabel = 'Boleta';
                 if (tipo_comprobante === 2) docLabel = 'Factura';
                 else if (tipo_comprobante === 3) docLabel = 'Nota de Venta';
@@ -1176,24 +1095,15 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                                     cart = [];
                                     renderCart();
                                     
-                                    // Open Print Modal
+                                    // Levantar Modal de previsualización e Impresión de Comprobante
                                     openPrintModal(result.id_venta);
                                 });
                             } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: result.mensaje,
-                                    confirmButtonColor: '#15803d'
-                                });
+                                Swal.fire({ icon: 'error', title: 'Error', text: result.mensaje, confirmButtonColor: '#15803d' });
                                 submitSaleBtn.disabled = false;
                             }
                         } catch (err) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error de red',
-                                text: 'No se pudo contactar al servidor.'
-                            });
+                            Swal.fire({ icon: 'error', title: 'Error de red', text: 'No se pudo contactar al servidor.' });
                             submitSaleBtn.disabled = false;
                         }
                     }
@@ -1201,7 +1111,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         }
         
-        // --- PRINT MODAL LOGIC ---
+        // --- CONTROL DEL MODAL DE IMPRESIÓN ---
         let currentPrintId = null;
         let currentPrintFormat = '80mm';
 
@@ -1227,6 +1137,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         });
 
+        // Renderizar el comprobante en caliente cambiando el src del visor iframe
         function loadIframePreview() {
             const iframe = document.getElementById('pdfPreviewFrame');
             const spinner = document.getElementById('pdfLoadingSpinner');
@@ -1234,7 +1145,6 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             iframe.style.display = 'none';
             spinner.style.display = 'flex';
             
-            // Build URL
             const url = `views/V_ticket_print.php?id=${currentPrintId}&format=${currentPrintFormat}`;
             
             iframe.onload = function() {
@@ -1245,6 +1155,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             iframe.src = url;
         }
 
+        // Llamar a la ventana de impresión interna del iframe
         window.printCurrentIframe = function() {
             const iframe = document.getElementById('pdfPreviewFrame');
             if (iframe.contentWindow) {
