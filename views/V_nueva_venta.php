@@ -145,13 +145,21 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 </style>
 
 <div class="container-fluid px-0">
-    <!-- Overlay de Caja Cerrada: Bloquea la navegación e impide ventas si la caja no está abierta -->
+    <!-- Modal Bloqueante de Caja Cerrada -->
     <?php if (!$cajaAbierta): ?>
-    <div class="position-fixed w-100 h-100 top-0 start-0 d-flex flex-column align-items-center justify-content-center" style="z-index: 9999; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);">
-        <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 4rem;"></i>
-        <h2 class="fw-bold text-dark mb-2">Caja Cerrada</h2>
-        <p class="text-muted fs-5 mb-4 text-center">Debes aperturar tu caja para poder registrar ventas en el sistema.</p>
-        <a href="index.php?modulo=caja" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm"><i class="bi bi-unlock-fill me-2"></i> Ir a Mi Caja</a>
+    <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px);" aria-modal="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg text-center p-4" style="border-radius: 15px;">
+                <div class="modal-body">
+                    <i class="bi bi-lock-fill text-muted mb-3 d-block" style="font-size: 3.5rem;"></i>
+                    <h3 class="fw-bold text-dark mb-2">Caja Cerrada</h3>
+                    <p class="text-muted mb-4" style="font-size: 14px;">Debes aperturar tu caja para poder registrar ventas en el sistema.</p>
+                    <a href="index.php?modulo=caja" class="btn btn-success rounded-pill px-4 py-2 fw-bold w-100 shadow-sm">
+                        <i class="bi bi-unlock-fill me-2"></i> Ir a Mi Caja
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
     <style> body { overflow: hidden; } </style>
     <?php endif; ?>
