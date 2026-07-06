@@ -25,7 +25,7 @@ try {
     $activeUsers = intval($stmt->fetch()['count']);
 
     // 4. Insumos con Stock Bajo (<= 20)
-    $stmt = $dbh->query("SELECT COUNT(*) as count FROM insumos WHERE stock <= 20 AND estado = 1");
+    $stmt = $dbh->query("SELECT COUNT(*) as count FROM insumos WHERE stock_piezas <= 20 AND estado = 1");
     $lowStockCount = intval($stmt->fetch()['count']);
 
     // 5. Historial Reciente (Últimas 5 ventas)
