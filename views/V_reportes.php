@@ -21,8 +21,8 @@ $activeProductsCount = intval($stmt->fetch()['count']);
 $stmt = $dbh->query("SELECT COUNT(*) as count FROM clientes");
 $activeClientsCount = intval($stmt->fetch()['count']);
 
-// 4. Consultar los 5 insumos con mayor demanda en base a la suma de cantidades vendidas
-$stmt = $dbh->query("SELECT i.nombre, SUM(dv.cantidad) as vendidos, i.precio_unitario, um.abreviatura as unidad
+// 4. Consultar los 5 insumos con mayor demanda en base a la suma de piezas vendidas
+$stmt = $dbh->query("SELECT i.nombre, SUM(dv.piezas) as vendidos, i.precio_unitario, um.abreviatura as unidad
                      FROM detalle_ventas dv
                      INNER JOIN insumos i ON dv.id_insumo = i.id_insumo
                      INNER JOIN unidades_medida um ON i.id_unidad = um.id_unidad

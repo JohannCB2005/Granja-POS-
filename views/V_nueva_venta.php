@@ -246,12 +246,12 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                                     <div class="card h-100 border border-light shadow-sm hover-shadow-md transition-all position-relative" style="border-radius: 12px; overflow: hidden;">
                                         <!-- Alerta de Stock Mínimo -->
                                         <div class="position-absolute top-0 end-0 m-2">
-                                            <?php if ($ins['stock'] <= 0): ?>
+                                            <?php if ($ins['stock_piezas'] <= 0): ?>
                                                 <span class="badge bg-danger rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Agotado</span>
-                                            <?php elseif ($ins['stock'] <= 20): ?>
-                                                <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Bajo Stock (<?php echo number_format($ins['stock'], 1); ?>)</span>
+                                            <?php elseif ($ins['stock_piezas'] <= 20): ?>
+                                                <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Bajo Stock (<?php echo number_format($ins['stock_piezas'], 1); ?>)</span>
                                             <?php else: ?>
-                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Stock: <?php echo number_format($ins['stock'], 1); ?></span>
+                                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1 fw-bold" style="font-size: 10px;">Stock: <?php echo number_format($ins['stock_piezas'], 1); ?></span>
                                             <?php endif; ?>
                                         </div>
 
@@ -271,10 +271,11 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                                                         data-id="<?php echo $ins['id_insumo']; ?>"
                                                         data-nombre="<?php echo htmlspecialchars($ins['nombre']); ?>"
                                                         data-precio="<?php echo $ins['precio_unitario']; ?>"
-                                                        data-stock="<?php echo $ins['stock']; ?>"
+                                                        data-stock="<?php echo $ins['stock_piezas']; ?>"
                                                         data-unidad="<?php echo htmlspecialchars($ins['abreviatura']); ?>"
+                                                        data-contenido="<?php echo htmlspecialchars($ins['contenido_estandar'] ?? ''); ?>"
                                                         style="width: 32px; height: 32px; border-radius: 8px; padding: 0;"
-                                                        <?php echo $ins['stock'] <= 0 ? 'disabled' : ''; ?>>
+                                                        <?php echo $ins['stock_piezas'] <= 0 ? 'disabled' : ''; ?>>
                                                     <i class="bi bi-plus-lg"></i>
                                                 </button>
                                             </div>
@@ -332,6 +333,62 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         <span>Registrar Venta</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL DE PESAJE PARA INSUMOS DE PESO VARIABLE -->
+<!-- ============================================== -->
+<div class="modal fade" id="modalPesaje" tabindex="-1" aria-labelledby="modalPesajeLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header bg-success bg-gradient text-white border-0 py-3">
+                <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2" id="modalPesajeLabel">
+                    <i class="bi bi-moisture"></i> Registrar Pesaje
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="text-center mb-4">
+                    <h6 id="pesajeNombre" class="fw-bold text-dark mb-1">Nombre Insumo</h6>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-bold" style="font-size: 11px;">
+                        Precio x Kg: S/ <span id="pesajePrecioUnitario">0.00</span>
+                    </span>
+                    <p class="text-muted mt-2 mb-0" style="font-size: 11px;" id="pesajeStockInfo">Stock disponible: 0</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted fw-semibold" style="font-size: 12px;">Nro. de Piezas (Animales)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-hash text-muted"></i></span>
+                        <input type="number" class="form-control border-start-0 fw-bold fs-5" id="pesajePiezas" value="1" min="1" step="1">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted fw-semibold" style="font-size: 12px;">Peso Total Registrado en Balanza (Kg)</label>
+                    <div class="input-group input-group-lg shadow-sm">
+                        <span class="input-group-text bg-white border-end-0 text-success fw-bold">Kg</span>
+                        <input type="number" class="form-control border-start-0 fw-bold text-dark" id="pesajePesoNeto" placeholder="0.00" min="0.01" step="0.01" style="font-size: 1.5rem;">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center bg-white p-3 rounded-3 border border-success border-opacity-25 shadow-sm">
+                    <span class="text-muted fw-semibold" style="font-size: 12px;">Subtotal Calculado</span>
+                    <span class="fw-bold fs-4 text-success" id="pesajeSubtotal">S/ 0.00</span>
+                </div>
+                
+                <input type="hidden" id="pesajeId">
+                <input type="hidden" id="pesajeUnidad">
+                <input type="hidden" id="pesajeStockMax">
+            </div>
+            <div class="modal-footer border-0 p-3 bg-white">
+                <button type="button" class="btn btn-light text-muted fw-semibold w-100 mb-2" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success fw-bold w-100 py-2 shadow-sm" id="btnConfirmarPesaje">
+                    <i class="bi bi-cart-plus me-1"></i> Agregar al Carrito
+                </button>
             </div>
         </div>
     </div>
@@ -885,6 +942,20 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             });
         });
 
+        // Lógica del modal de pesaje
+        const modalPesajeObj = new bootstrap.Modal(document.getElementById('modalPesaje'));
+        const pesajePiezasInput = document.getElementById('pesajePiezas');
+        const pesajePesoNetoInput = document.getElementById('pesajePesoNeto');
+        const pesajeSubtotalText = document.getElementById('pesajeSubtotal');
+        
+        function calcularSubtotalPesaje() {
+            const peso = parseFloat(pesajePesoNetoInput.value) || 0;
+            const precio = parseFloat(document.getElementById('pesajePrecioUnitario').innerText);
+            pesajeSubtotalText.innerText = `S/ ${(peso * precio).toFixed(2)}`;
+        }
+
+        pesajePesoNetoInput.addEventListener('input', calcularSubtotalPesaje);
+
         // Agregar artículo al carrito y evaluar stock en vivo
         document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -893,7 +964,29 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 const precio = parseFloat(btn.dataset.precio);
                 const stock = parseFloat(btn.dataset.stock);
                 const unidad = btn.dataset.unidad;
+                const contenido = btn.dataset.contenido;
 
+                // Si contenido === '' o null, es un producto de peso variable (Ej: Pavo Vivo)
+                if (!contenido || contenido === '') {
+                    // Configurar y Abrir Modal de Pesaje
+                    document.getElementById('pesajeId').value = id;
+                    document.getElementById('pesajeNombre').innerText = nombre;
+                    document.getElementById('pesajePrecioUnitario').innerText = precio.toFixed(2);
+                    document.getElementById('pesajeStockInfo').innerText = `Stock disponible: ${stock} piezas`;
+                    document.getElementById('pesajeUnidad').value = unidad;
+                    document.getElementById('pesajeStockMax').value = stock;
+                    
+                    pesajePiezasInput.value = 1;
+                    pesajePiezasInput.max = stock;
+                    pesajePesoNetoInput.value = '';
+                    pesajeSubtotalText.innerText = 'S/ 0.00';
+                    
+                    modalPesajeObj.show();
+                    setTimeout(() => pesajePesoNetoInput.focus(), 500); // Autofocus en balanza
+                    return; // Detener flujo normal
+                }
+
+                // LÓGICA NORMAL (Para insumos con peso estándar fijo o unitarios)
                 const existing = cart.find(item => item.id_insumo === id);
                 if (existing) {
                     if (existing.cantidad + 1 > stock) {
@@ -901,6 +994,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         return;
                     }
                     existing.cantidad += 1;
+                    existing.peso_neto = existing.cantidad * parseFloat(contenido);
                     existing.subtotal = existing.cantidad * existing.precio;
                 } else {
                     cart.push({
@@ -909,13 +1003,61 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         precio: precio,
                         stock: stock,
                         unidad: unidad,
-                        cantidad: 1,
-                        subtotal: precio
+                        cantidad: 1, // esto actúa como 'piezas' físicas
+                        peso_neto: parseFloat(contenido), // Calculado automático base
+                        subtotal: precio,
+                        es_variable: false
                     });
                 }
 
                 renderCart();
             });
+        });
+
+        // Confirmar pesaje e insertar al carrito desde el modal
+        document.getElementById('btnConfirmarPesaje').addEventListener('click', () => {
+            const id = parseInt(document.getElementById('pesajeId').value);
+            const nombre = document.getElementById('pesajeNombre').innerText;
+            const precio = parseFloat(document.getElementById('pesajePrecioUnitario').innerText);
+            const stockMax = parseFloat(document.getElementById('pesajeStockMax').value);
+            const unidad = document.getElementById('pesajeUnidad').value;
+            
+            const piezas = parseInt(pesajePiezasInput.value) || 0;
+            const pesoNeto = parseFloat(pesajePesoNetoInput.value) || 0;
+
+            if (piezas <= 0 || pesoNeto <= 0) {
+                Swal.fire({ icon: 'error', title: 'Datos inválidos', text: 'Debe ingresar un número de piezas y el peso en balanza.'});
+                return;
+            }
+
+            const existing = cart.find(item => item.id_insumo === id);
+            const currentPiezas = existing ? existing.cantidad : 0;
+
+            if (currentPiezas + piezas > stockMax) {
+                Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `Intentas sacar ${currentPiezas + piezas} piezas, pero solo hay ${stockMax} en stock.` });
+                return;
+            }
+
+            if (existing) {
+                existing.cantidad += piezas;
+                existing.peso_neto += pesoNeto; // Suma acumulativa de peso
+                existing.subtotal = existing.peso_neto * existing.precio;
+            } else {
+                cart.push({
+                    id_insumo: id,
+                    nombre: nombre,
+                    precio: precio,
+                    stock: stockMax,
+                    unidad: unidad,
+                    cantidad: piezas,
+                    peso_neto: pesoNeto,
+                    subtotal: (pesoNeto * precio),
+                    es_variable: true
+                });
+            }
+
+            modalPesajeObj.hide();
+            renderCart();
         });
 
         if (clearCartBtn) {
@@ -930,14 +1072,28 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             const item = cart.find(i => i.id_insumo === id);
             if (!item) return;
 
+            if (item.es_variable) {
+                Swal.fire({ 
+                    icon: 'info', 
+                    title: 'Producto pesado', 
+                    text: 'No se puede cambiar la cantidad de un producto pesado en línea. Elimínelo del carrito y vuelva a pesarlo.',
+                    confirmButtonColor: '#15803d' 
+                });
+                if (newQty <= 0) renderCart(); // restaurar vista
+                return;
+            }
+
             if (newQty <= 0) {
                 cart = cart.filter(i => i.id_insumo !== id);
             } else if (newQty > item.stock) {
                 Swal.fire({ icon: 'warning', title: 'Stock Insuficiente', text: `El stock disponible es de ${item.stock} ${item.unidad}.`, confirmButtonColor: '#15803d' });
                 item.cantidad = item.stock;
+                item.peso_neto = item.cantidad * (item.peso_neto / (item.cantidad - 1 || 1));
                 item.subtotal = item.cantidad * item.precio;
             } else {
+                const contenidoEstandar = (item.peso_neto && item.cantidad > 0) ? (item.peso_neto / item.cantidad) : 0;
                 item.cantidad = newQty;
+                item.peso_neto = newQty * contenidoEstandar;
                 item.subtotal = item.cantidad * item.precio;
             }
             renderCart();
@@ -977,6 +1133,37 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 
             cart.forEach(item => {
                 totalGeneral += item.subtotal;
+
+                let renderQtyInfo = `<div class="d-flex align-items-center border rounded-2" style="height: 32px; width: 105px; overflow: hidden; background: #fff;">
+                                    <button class="btn btn-light rounded-0 border-0 p-0 text-secondary d-flex align-items-center justify-content-center" 
+                                            onclick="window.posDecrease(${item.id_insumo})" style="width: 30px; height: 100%; background: #f8f9fa;">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control border-0 text-center p-0 m-0 fw-semibold text-dark" 
+                                           value="${item.cantidad}" step="0.01" min="0.01" 
+                                           style="font-size: 13px; box-shadow: none; width: 45px; height: 100%; -moz-appearance: textfield; background: #fff;" 
+                                           onchange="window.posChange(${item.id_insumo}, this.value)"
+                                           oninput="this.style.appearance = 'none'; this.style.webkitAppearance = 'none';">
+                                    <button class="btn btn-light rounded-0 border-0 p-0 text-secondary d-flex align-items-center justify-content-center" 
+                                            onclick="window.posIncrease(${item.id_insumo})" style="width: 30px; height: 100%; background: #f8f9fa;">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <style>
+                                    input[type=number]::-webkit-inner-spin-button, 
+                                    input[type=number]::-webkit-outer-spin-button { 
+                                        -webkit-appearance: none; 
+                                        margin: 0; 
+                                    }
+                                </style>`;
+                
+                if (item.es_variable) {
+                    renderQtyInfo = `<div class="d-flex flex-column align-items-end justify-content-center px-2" style="width: 90px;">
+                                        <div class="fw-bold text-dark" style="font-size: 13px;">${item.cantidad} pzs</div>
+                                        <div class="text-muted" style="font-size: 11px;">${item.peso_neto.toFixed(2)} Kg</div>
+                                     </div>`;
+                }
+
                 cartHtml += `
                     <div class="list-group-item px-0 py-2.5 border-bottom bg-transparent d-flex flex-column gap-1">
                         <div class="d-flex align-items-center justify-content-between">
@@ -984,17 +1171,9 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                             <span class="fw-bold text-dark" style="font-size: 13.5px;">S/ ${item.subtotal.toFixed(2)}</span>
                         </div>
                         <div class="d-flex align-items-center justify-content-between">
-                            <div class="input-group input-group-sm" style="max-width: 120px;">
-                                <button class="btn btn-outline-secondary px-2 border" type="button" onclick="window.posDecrease(${item.id_insumo})">
-                                    <i class="bi bi-dash"></i>
-                                </button>
-                                <input type="number" class="form-control text-center py-0" value="${item.cantidad}" step="0.01" min="0.01" style="font-size: 12px;" onchange="window.posChange(${item.id_insumo}, this.value)">
-                                <button class="btn btn-outline-secondary px-2 border" type="button" onclick="window.posIncrease(${item.id_insumo})">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
+                            ${renderQtyInfo}
                             <div class="d-flex align-items-center gap-2">
-                                <span class="text-muted" style="font-size: 11px;">S/ ${item.precio.toFixed(2)} / ${item.unidad}</span>
+                                <span class="text-muted" style="font-size: 11px;">S/ ${item.precio.toFixed(2)} ${item.es_variable ? 'x Kg' : '/ ' + item.unidad}</span>
                                 <button class="btn btn-link text-danger p-0 border-0" onclick="window.posRemove(${item.id_insumo})">
                                     <i class="bi bi-trash3-fill"></i>
                                 </button>
@@ -1054,7 +1233,8 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     total,
                     cart: cart.map(item => ({
                         id_insumo: item.id_insumo,
-                        cantidad: item.cantidad,
+                        piezas: item.cantidad,
+                        peso_neto: item.peso_neto || 0,
                         precio: item.precio,
                         subtotal: item.subtotal
                     }))

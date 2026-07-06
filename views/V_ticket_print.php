@@ -308,7 +308,12 @@ p { margin: 1px 0; }
         <?php foreach ($detalles as $i => $d): ?>
         <tr>
             <td><?php echo str_pad($i+1, 2, '0', STR_PAD_LEFT); ?></td>
-            <td><?php echo number_format($d['cantidad'], 2); ?></td>
+            <td>
+                <?php echo number_format($d['piezas'], 2); ?>
+                <?php if (!empty($d['peso_neto']) && $d['peso_neto'] > 0): ?>
+                    <br><small style="font-size:9px;color:#555;"><?php echo number_format($d['peso_neto'], 2); ?> Kg</small>
+                <?php endif; ?>
+            </td>
             <td><?php echo htmlspecialchars($d['abreviatura']); ?></td>
             <td><?php echo htmlspecialchars($d['insumo_nombre']); ?></td>
             <td class="r"><?php echo number_format($d['precio_venta'], 2); ?></td>
@@ -385,7 +390,12 @@ p { margin: 1px 0; }
         <?php foreach ($detalles as $i => $d): ?>
         <tr>
             <td><?php echo str_pad($i+1, 2, '0', STR_PAD_LEFT); ?></td>
-            <td><?php echo number_format($d['cantidad'], 2); ?></td>
+            <td>
+                <?php echo number_format($d['piezas'], 2); ?>
+                <?php if (!empty($d['peso_neto']) && $d['peso_neto'] > 0): ?>
+                    <br><small><?php echo number_format($d['peso_neto'], 2); ?>Kg</small>
+                <?php endif; ?>
+            </td>
             <td><?php echo htmlspecialchars($d['abreviatura']); ?></td>
             <td><?php echo htmlspecialchars($d['insumo_nombre']); ?></td>
             <td class="r"><?php echo number_format($d['precio_venta'], 2); ?></td>

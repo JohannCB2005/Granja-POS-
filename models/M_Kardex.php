@@ -32,7 +32,7 @@ class M_Kardex {
     public function listarInsumos() {
         try {
             $sql = "SELECT i.id_insumo, i.nombre, c.nombre AS categoria, u.abreviatura,
-                           i.precio_unitario, i.stock
+                           i.precio_unitario, i.stock_piezas
                     FROM insumos i
                     INNER JOIN categorias c ON i.id_categoria = c.id_categoria
                     INNER JOIN unidades_medida u ON i.id_unidad = u.id_unidad
@@ -98,7 +98,8 @@ class M_Kardex {
                         END AS tipo_doc,
                         LPAD(v.id_venta, 6, '0') AS numero_doc,
                         CONCAT('Venta a ', p.nombres_razon_social, IFNULL(CONCAT(' ', p.apellidos), '')) AS concepto,
-                        dv.cantidad AS salida_cant,
+                        dv.piezas AS salida_cant,
+                        dv.peso_neto AS salida_peso,
                         dv.precio_venta AS costo_unit,
                         dv.subtotal AS salida_ct,
                         'salida' AS tipo_movimiento
@@ -118,7 +119,7 @@ class M_Kardex {
 
             // 2. Obtener los datos básicos de stock y unidad del insumo
             $infoStmt = $this->conexion->prepare(
-                "SELECT i.nombre, c.nombre AS categoria, u.abreviatura, i.precio_unitario, i.stock
+                "SELECT i.nombre, c.nombre AS categoria, u.abreviatura, i.precio_unitario, i.stock_piezas
                  FROM insumos i
                  INNER JOIN categorias c ON i.id_categoria = c.id_categoria
                  INNER JOIN unidades_medida u ON i.id_unidad = u.id_unidad
@@ -131,7 +132,7 @@ class M_Kardex {
 
             // 3. Reconstruir stock: Sumar todo lo vendido al stock actual para obtener el stock inicial (Apertura)
             $totalVendido = array_sum(array_column($salidas, 'salida_cant'));
-            $stockActual = floatval($insumo['stock']);
+            $stockActual = floatval($insumo['stock_piezas']);
             $stockInicial = $stockActual + $totalVendido;
             $precioUnit = floatval($insumo['precio_unitario']);
 
@@ -180,6 +181,7 @@ class M_Kardex {
                     'entrada_cu'    => null,
                     'entrada_ct'    => null,
                     'salida_cant'   => $cant,
+                    'salida_peso'   => floatval($mov['salida_peso']),
                     'salida_cu'     => $cu,
                     'salida_ct'     => $mov['salida_ct'],
                     'saldo_cant'    => $saldoCant,

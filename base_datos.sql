@@ -1,6 +1,6 @@
 -- ==============================================================================
 -- SISTEMA DE VENTAS DE INSUMOS DE GRANJA (POS)
--- SCRIPT DE BASE DE DATOS FINAL (Limpiado y Ordenado para el IDE)
+-- SCRIPT DE BASE DE DATOS FINAL (Lógica de Piezas y Peso en Caja)
 -- ==============================================================================
 
 CREATE DATABASE IF NOT EXISTS granja_pos DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -74,7 +74,8 @@ CREATE TABLE insumos (
   id_unidad INT(11) NOT NULL,
   nombre VARCHAR(150) NOT NULL,
   precio_unitario DECIMAL(10,2) NOT NULL,
-  stock DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  stock_piezas DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  contenido_estandar DECIMAL(10,2) DEFAULT NULL COMMENT 'Peso estándar por pieza. NULL = peso variable (aves vivas).',
   estado TINYINT(1) DEFAULT 1,
   PRIMARY KEY (id_insumo),
   FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria),
@@ -103,7 +104,8 @@ CREATE TABLE detalle_ventas (
   id_detalle INT(11) NOT NULL AUTO_INCREMENT,
   id_venta INT(11) NOT NULL,
   id_insumo INT(11) NOT NULL,
-  cantidad DECIMAL(10,2) NOT NULL,
+  piezas DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  peso_neto DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   precio_venta DECIMAL(10,2) NOT NULL,
   subtotal DECIMAL(10,2) NOT NULL,
   PRIMARY KEY (id_detalle),
@@ -111,6 +113,25 @@ CREATE TABLE detalle_ventas (
   FOREIGN KEY (id_insumo) REFERENCES insumos(id_insumo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ==========================================
+-- 3.1 TABLA DE CAJAS
+-- ==========================================
+
+CREATE TABLE cajas (
+  id_caja       INT(11) NOT NULL AUTO_INCREMENT,
+  id_usuario    INT(11) NOT NULL,
+  monto_apertura DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  monto_cierre   DECIMAL(10,2) DEFAULT NULL,
+  fecha_cierre   DATETIME DEFAULT NULL,
+  total_ventas   DECIMAL(10,2) DEFAULT NULL,     -- calculado al cerrar
+  num_ventas     INT(11) DEFAULT NULL,            -- calculado al cerrar
+  diferencia     DECIMAL(10,2) DEFAULT NULL,      -- sobrante(+) / faltante(-)
+  observaciones  TEXT DEFAULT NULL,               -- nota opcional al cerrar
+  estado         TINYINT(1) NOT NULL DEFAULT 1,   -- 1=Abierta, 0=Cerrada
+  PRIMARY KEY (id_caja),
+  FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ==========================================
 -- 4. DATA SEMILLA (Valores por defecto)
@@ -138,6 +159,8 @@ INSERT INTO usuarios (id_usuario, id_persona, id_rol, username, password) VALUES
 INSERT INTO clientes (id_cliente, id_persona, tipo_cliente) VALUES
 (1, 2, 1);
 
+INSERT INTO categorias (nombre, descripcion, estado) VALUES 
+('Aves', 'Pavos, gallinas y otras aves vivas', 1);
 
 -- ==========================================
 -- 5. PROCEDIMIENTOS ALMACENADOS
@@ -152,7 +175,9 @@ CREATE PROCEDURE sp_registrar_usuario(
     IN p_id_rol INT, IN p_username VARCHAR(50), IN p_password VARCHAR(255)
 )
 BEGIN
-    DECLARE v_id_persona INT;
+    DECLARE v_id_persona INT DEFAULT NULL;
+    DECLARE v_existe_usuario INT DEFAULT 0;
+    
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -160,13 +185,26 @@ BEGIN
     END;
 
     START TRANSACTION;
-    INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
-    VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
-    
-    SET v_id_persona = LAST_INSERT_ID();
+
+    SELECT id_persona INTO v_id_persona FROM personas WHERE numero_documento = p_numero_documento LIMIT 1;
+
+    IF v_id_persona IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_existe_usuario FROM usuarios WHERE id_persona = v_id_persona;
+        
+        IF v_existe_usuario > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Este documento ya pertenece a un usuario del sistema.';
+        ELSE
+            UPDATE personas SET nombres_razon_social = p_nombres_razon_social, apellidos = p_apellidos, direccion = p_direccion, telefono = p_telefono, estado = 1 WHERE id_persona = v_id_persona;
+        END IF;
+    ELSE
+        INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
+        VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
+        SET v_id_persona = LAST_INSERT_ID();
+    END IF;
 
     INSERT INTO usuarios (id_persona, id_rol, username, password)
     VALUES (v_id_persona, p_id_rol, p_username, p_password);
+
     COMMIT;
 END$$
 
@@ -185,16 +223,13 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Check if a persona with this document number already exists
     SELECT id_persona INTO v_id_persona FROM personas WHERE numero_documento = p_numero_documento LIMIT 1;
 
     IF v_id_persona IS NULL THEN
-        -- Persona does not exist: insert into personas first
         INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
         VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
         SET v_id_persona = LAST_INSERT_ID();
     ELSE
-        -- Persona exists but may have been soft-deleted: restore and update their data
         UPDATE personas SET
             tipo_documento       = p_tipo_documento,
             nombres_razon_social = p_nombres_razon_social,
@@ -205,7 +240,6 @@ BEGIN
         WHERE id_persona = v_id_persona;
     END IF;
 
-    -- Insert into clientes (will fail with FK/UNIQUE if already a client, which is correct)
     INSERT INTO clientes (id_persona, tipo_cliente)
     VALUES (v_id_persona, p_tipo_cliente);
 
@@ -221,10 +255,11 @@ BEGIN
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_count INT;
     DECLARE v_id_insumo INT;
-    DECLARE v_cantidad DECIMAL(10,2);
+    DECLARE v_piezas DECIMAL(10,2);
+    DECLARE v_peso_neto DECIMAL(10,2);
     DECLARE v_precio DECIMAL(10,2);
     DECLARE v_subtotal DECIMAL(10,2);
-    DECLARE v_stock_actual DECIMAL(10,2);
+    DECLARE v_stock_piezas_actual DECIMAL(10,2);
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -240,21 +275,28 @@ BEGIN
     SET v_count = JSON_LENGTH(p_json_detalles);
 
     WHILE v_i < v_count DO
-        SET v_id_insumo = JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].id_insumo')));
-        SET v_cantidad = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].cantidad'))) AS DECIMAL(10,2));
+        SET v_id_insumo = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].id_insumo'))) AS UNSIGNED);
+        
+        SET v_piezas = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].piezas'))) AS DECIMAL(10,2));
+        SET v_peso_neto = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].peso_neto'))) AS DECIMAL(10,2));
+        
         SET v_precio = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].precio'))) AS DECIMAL(10,2));
         SET v_subtotal = CAST(JSON_UNQUOTE(JSON_EXTRACT(p_json_detalles, CONCAT('$[', v_i, '].subtotal'))) AS DECIMAL(10,2));
 
-        SELECT stock INTO v_stock_actual FROM insumos WHERE id_insumo = v_id_insumo FOR UPDATE;
+        SELECT stock_piezas INTO v_stock_piezas_actual 
+        FROM insumos WHERE id_insumo = v_id_insumo FOR UPDATE;
 
-        IF v_stock_actual < v_cantidad THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente. Transacción cancelada.';
+        IF v_stock_piezas_actual < v_piezas THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock físico (piezas) insuficiente. Transacción cancelada.';
         END IF;
 
-        INSERT INTO detalle_ventas (id_venta, id_insumo, cantidad, precio_venta, subtotal)
-        VALUES (v_id_venta, v_id_insumo, v_cantidad, v_precio, v_subtotal);
+        INSERT INTO detalle_ventas (id_venta, id_insumo, piezas, peso_neto, precio_venta, subtotal)
+        VALUES (v_id_venta, v_id_insumo, v_piezas, v_peso_neto, v_precio, v_subtotal);
 
-        UPDATE insumos SET stock = stock - v_cantidad WHERE id_insumo = v_id_insumo;
+        UPDATE insumos 
+        SET stock_piezas = stock_piezas - v_piezas 
+        WHERE id_insumo = v_id_insumo;
+        
         SET v_i = v_i + 1;
     END WHILE;
     COMMIT;
@@ -264,9 +306,9 @@ CREATE PROCEDURE sp_anular_venta(IN p_id_venta INT)
 BEGIN
     DECLARE done INT DEFAULT FALSE;
     DECLARE v_id_insumo INT;
-    DECLARE v_cantidad DECIMAL(10,2);
+    DECLARE v_piezas DECIMAL(10,2);
 
-    DECLARE cur CURSOR FOR SELECT id_insumo, cantidad FROM detalle_ventas WHERE id_venta = p_id_venta;
+    DECLARE cur CURSOR FOR SELECT id_insumo, piezas FROM detalle_ventas WHERE id_venta = p_id_venta;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -280,34 +322,17 @@ BEGIN
 
     OPEN cur;
     read_loop: LOOP
-        FETCH cur INTO v_id_insumo, v_cantidad;
+        FETCH cur INTO v_id_insumo, v_piezas;
         IF done THEN
             LEAVE read_loop;
         END IF;
 
-        UPDATE insumos SET stock = stock + v_cantidad WHERE id_insumo = v_id_insumo;
+        UPDATE insumos 
+        SET stock_piezas = stock_piezas + v_piezas
+        WHERE id_insumo = v_id_insumo;
     END LOOP;
     CLOSE cur;
     COMMIT;
 END$$
+
 DELIMITER ;
-
--- ==========================================
--- 6. TABLA DE CAJAS
--- ==========================================
-
-CREATE TABLE cajas (
-  id_caja       INT(11) NOT NULL AUTO_INCREMENT,
-  id_usuario    INT(11) NOT NULL,
-  monto_apertura DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  monto_cierre   DECIMAL(10,2) DEFAULT NULL,
-  fecha_cierre   DATETIME DEFAULT NULL,
-  total_ventas   DECIMAL(10,2) DEFAULT NULL,     -- calculado al cerrar
-  num_ventas     INT(11) DEFAULT NULL,            -- calculado al cerrar
-  diferencia     DECIMAL(10,2) DEFAULT NULL,      -- sobrante(+) / faltante(-)
-  observaciones  TEXT DEFAULT NULL,               -- nota opcional al cerrar
-  estado         TINYINT(1) NOT NULL DEFAULT 1,   -- 1=Abierta, 0=Cerrada
-  PRIMARY KEY (id_caja),
-  FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

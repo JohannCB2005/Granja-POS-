@@ -363,13 +363,18 @@ $ventas = $modelVenta->listar($id_vendedor);
                     if (details && details.length > 0) {
                         let rowsHtml = '';
                         details.forEach(item => {
-                            const cant = parseFloat(item.cantidad);
+                            const piezas = parseFloat(item.piezas);
+                            const pesoNeto = parseFloat(item.peso_neto || 0);
                             const prec = parseFloat(item.precio_venta);
                             const subt = parseFloat(item.subtotal);
+                            // Mostrar piezas + peso si el insumo tiene peso variable (pavos)
+                            const cantDisplay = pesoNeto > 0
+                                ? `${piezas} pzs · ${pesoNeto.toFixed(2)} Kg`
+                                : `${piezas} ${item.abreviatura}`;
                             rowsHtml += `
                                 <tr>
                                     <td class="ps-0 text-dark fw-medium">${item.insumo_nombre}</td>
-                                    <td class="text-center text-muted">${cant} ${item.abreviatura}</td>
+                                    <td class="text-center text-muted">${cantDisplay}</td>
                                     <td class="text-end text-muted">S/ ${prec.toFixed(2)}</td>
                                     <td class="text-end pe-0 fw-semibold text-dark">S/ ${subt.toFixed(2)}</td>
                                 </tr>

@@ -1,15 +1,37 @@
 <?php
+/**
+ * Entidad DetalleVenta
+ * Representa una línea de producto dentro de una venta.
+ *
+ * Regla de negocio:
+ *   - piezas    → Cuántas unidades físicas salieron (Ej: 2 pavos, 3 sacos).
+ *                 Es el campo que se descuenta del stock de inventario.
+ *   - peso_neto → Peso total registrado en balanza (Ej: 19.50 Kg).
+ *                 Para insumos de peso fijo se calcula: piezas × contenido_estandar.
+ *                 Para pavos/aves, es el valor real pesado al momento de la venta.
+ *   - subtotal  → Para insumos normales: piezas × precio_venta.
+ *                 Para pavos: peso_neto × precio_venta.
+ */
 class DetalleVenta {
     public $id_detalle;
     public $id_insumo;
-    public $cantidad;
+    public $piezas;       // Unidades físicas que salen del inventario
+    public $peso_neto;    // Peso real en Kg (balanza). 0 si no aplica
     public $precio_venta;
     public $subtotal;
 
-    public function __construct($id_detalle = null, $id_insumo = null, $cantidad = 0, $precio_venta = 0.0, $subtotal = 0.0) {
+    public function __construct(
+        $id_detalle  = null,
+        $id_insumo   = null,
+        $piezas      = 0,
+        $peso_neto   = 0.0,
+        $precio_venta= 0.0,
+        $subtotal    = 0.0
+    ) {
         $this->id_detalle  = $id_detalle;
         $this->id_insumo   = $id_insumo;
-        $this->cantidad    = $cantidad;
+        $this->piezas      = $piezas;
+        $this->peso_neto   = $peso_neto;
         $this->precio_venta= $precio_venta;
         $this->subtotal    = $subtotal;
     }

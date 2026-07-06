@@ -39,7 +39,7 @@ $insumos = $modelKardex->listarInsumos();
                     <?php foreach ($insumos as $ins): ?>
                         <option value="<?= $ins['id_insumo'] ?>"
                                 data-precio="<?= $ins['precio_unitario'] ?>"
-                                data-stock="<?= $ins['stock'] ?>"
+                                data-stock="<?= $ins['stock_piezas'] ?>"
                                 data-unidad="<?= htmlspecialchars($ins['abreviatura']) ?>"
                                 data-categoria="<?= htmlspecialchars($ins['categoria']) ?>">
                             <?= htmlspecialchars($ins['nombre']) ?>
@@ -299,7 +299,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="text-end ${isEntrada ? 'fw-semibold' : 'text-muted'}">${isEntrada ? fmt(row.entrada_ct) : '—'}</td>
 
                     <!-- COLUMNAS SALIDAS -->
-                    <td class="text-end border-start border-2 ${!isEntrada && !isSaldo ? 'fw-semibold text-danger' : 'text-muted'}">${!isEntrada && !isSaldo ? fmtNum(row.salida_cant, unidad) : '—'}</td>
+                    <td class="text-end border-start border-2 ${!isEntrada && !isSaldo ? 'fw-semibold text-danger' : 'text-muted'}">
+                        ${!isEntrada && !isSaldo 
+                            ? (row.salida_peso > 0 
+                                ? fmtNum(row.salida_cant, 'pzs') + '<br><small style="font-size:10px;">' + fmtNum(row.salida_peso, 'Kg') + '</small>' 
+                                : fmtNum(row.salida_cant, unidad)) 
+                            : '—'}
+                    </td>
                     <td class="text-end ${!isEntrada && !isSaldo ? '' : 'text-muted'}">${!isEntrada && !isSaldo ? fmt(row.salida_cu) : '—'}</td>
                     <td class="text-end ${!isEntrada && !isSaldo ? 'fw-semibold' : 'text-muted'}">${!isEntrada && !isSaldo ? fmt(row.salida_ct) : '—'}</td>
 

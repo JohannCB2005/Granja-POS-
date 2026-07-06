@@ -39,14 +39,15 @@ class M_Venta {
             $sql = "CALL sp_registrar_venta(?, ?, ?, ?, ?)";
             $stmt = $this->conexion->prepare($sql);
             
-            // Extraemos los detalles de la entidad y armamos un arreglo plano para el JSON
+            // Extraemos los detalles de la entidad y armamos el arreglo para el JSON del SP
             $detallesArray = [];
             foreach ($venta->detalles as $detalle) {
                 $detallesArray[] = [
                     'id_insumo' => $detalle->id_insumo,
-                    'cantidad' => $detalle->cantidad,
-                    'precio' => $detalle->precio_venta,
-                    'subtotal' => $detalle->subtotal
+                    'piezas'    => $detalle->piezas,      // Unidades físicas que salen del inventario
+                    'peso_neto' => $detalle->peso_neto,   // Peso real en Kg (pavos) o calculado (sacos)
+                    'precio'    => $detalle->precio_venta,
+                    'subtotal'  => $detalle->subtotal
                 ];
             }
             
@@ -132,8 +133,8 @@ class M_Venta {
      */
     public function obtenerDetallesPorVenta($id_venta) {
         try {
-            $sql = "SELECT dv.cantidad, dv.precio_venta, dv.subtotal, 
-                    i.nombre AS insumo_nombre, um.abreviatura
+            $sql = "SELECT dv.piezas, dv.peso_neto, dv.precio_venta, dv.subtotal, 
+                    i.nombre AS insumo_nombre, i.contenido_estandar, um.abreviatura
                     FROM detalle_ventas dv
                     INNER JOIN insumos i ON dv.id_insumo = i.id_insumo
                     INNER JOIN unidades_medida um ON i.id_unidad = um.id_unidad

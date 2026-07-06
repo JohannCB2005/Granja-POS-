@@ -65,12 +65,15 @@ switch ($action) {
         
         // Cargar los items del carrito dentro de la entidad de venta
         foreach ($cart as $item) {
-            $id_insumo = intval($item['id_insumo']);
-            $cantidad = floatval($item['cantidad']);
-            $precio = floatval($item['precio']);
-            $subtotal = floatval($item['subtotal']);
+            $id_insumo  = intval($item['id_insumo']);
+            // piezas: unidades físicas vendidas (descuenta stock)
+            $piezas     = floatval($item['piezas'] ?? $item['cantidad'] ?? 0);
+            // peso_neto: peso real de balanza (pavos) o calculado (sacos)
+            $peso_neto  = floatval($item['peso_neto'] ?? 0.0);
+            $precio     = floatval($item['precio']);
+            $subtotal   = floatval($item['subtotal']);
 
-            $detalle = new DetalleVenta(null, $id_insumo, $cantidad, $precio, $subtotal);
+            $detalle = new DetalleVenta(null, $id_insumo, $piezas, $peso_neto, $precio, $subtotal);
             $venta->agregarDetalle($detalle);
         }
 

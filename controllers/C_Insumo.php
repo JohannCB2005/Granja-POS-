@@ -41,20 +41,26 @@ switch ($action) {
             echo json_encode(["success" => false, "mensaje" => "No tienes permisos para esta acción."]);
             exit;
         }
-        $id_categoria = isset($input['id_categoria']) ? intval($input['id_categoria']) : 0;
-        $id_unidad = isset($input['id_unidad']) ? intval($input['id_unidad']) : 0;
-        $nombre = isset($input['nombre']) ? trim($input['nombre']) : '';
-        $precio_unitario = isset($input['precio_unitario']) ? floatval($input['precio_unitario']) : 0.0;
-        $stock = isset($input['stock']) ? floatval($input['stock']) : 0.0;
+        $id_categoria       = isset($input['id_categoria'])       ? intval($input['id_categoria'])      : 0;
+        $id_unidad          = isset($input['id_unidad'])          ? intval($input['id_unidad'])          : 0;
+        $nombre             = isset($input['nombre'])             ? trim($input['nombre'])               : '';
+        $precio_unitario    = isset($input['precio_unitario'])    ? floatval($input['precio_unitario'])  : 0.0;
+        $stock_piezas       = isset($input['stock'])              ? floatval($input['stock'])            : 0.0;
+        // contenido_estandar: NULL si el checkbox de pesaje está activo (pavo/ave de peso variable)
+        //                     0    si el checkbox está desactivado (insumo normal de ingreso directo)
+        $contenido_estandar = null; // Por defecto: requiere pesaje
+        if (array_key_exists('contenido_estandar', $input) && $input['contenido_estandar'] !== null) {
+            $contenido_estandar = floatval($input['contenido_estandar']);
+        }
 
         // Validaciones básicas de integridad de datos
-        if ($id_categoria <= 0 || $id_unidad <= 0 || empty($nombre) || $precio_unitario < 0 || $stock < 0) {
+        if ($id_categoria <= 0 || $id_unidad <= 0 || empty($nombre) || $precio_unitario < 0 || $stock_piezas < 0) {
             echo json_encode(["success" => false, "mensaje" => "Datos inválidos o faltantes."]);
             exit;
         }
 
         // Crear entidad insumo y guardar en DB
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock);
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock_piezas, $contenido_estandar);
         if ($model->registrar($insumo)) {
             echo json_encode(["success" => true, "mensaje" => "Insumo registrado con éxito."]);
         } else {
@@ -68,21 +74,27 @@ switch ($action) {
             echo json_encode(["success" => false, "mensaje" => "No tienes permisos para esta acción."]);
             exit;
         }
-        $id_insumo = isset($input['id_insumo']) ? intval($input['id_insumo']) : 0;
-        $id_categoria = isset($input['id_categoria']) ? intval($input['id_categoria']) : 0;
-        $id_unidad = isset($input['id_unidad']) ? intval($input['id_unidad']) : 0;
-        $nombre = isset($input['nombre']) ? trim($input['nombre']) : '';
-        $precio_unitario = isset($input['precio_unitario']) ? floatval($input['precio_unitario']) : 0.0;
-        $stock = isset($input['stock']) ? floatval($input['stock']) : 0.0;
+        $id_insumo          = isset($input['id_insumo'])          ? intval($input['id_insumo'])          : 0;
+        $id_categoria       = isset($input['id_categoria'])       ? intval($input['id_categoria'])       : 0;
+        $id_unidad          = isset($input['id_unidad'])          ? intval($input['id_unidad'])          : 0;
+        $nombre             = isset($input['nombre'])             ? trim($input['nombre'])               : '';
+        $precio_unitario    = isset($input['precio_unitario'])    ? floatval($input['precio_unitario'])  : 0.0;
+        $stock_piezas       = isset($input['stock'])              ? floatval($input['stock'])            : 0.0;
+        // contenido_estandar: NULL si el checkbox de pesaje está activo (pavo/ave de peso variable)
+        //                     0    si el checkbox está desactivado (insumo normal de ingreso directo)
+        $contenido_estandar = null; // Por defecto: requiere pesaje
+        if (array_key_exists('contenido_estandar', $input) && $input['contenido_estandar'] !== null) {
+            $contenido_estandar = floatval($input['contenido_estandar']);
+        }
 
         // Validaciones de integridad
-        if ($id_insumo <= 0 || $id_categoria <= 0 || $id_unidad <= 0 || empty($nombre) || $precio_unitario < 0 || $stock < 0) {
+        if ($id_insumo <= 0 || $id_categoria <= 0 || $id_unidad <= 0 || empty($nombre) || $precio_unitario < 0 || $stock_piezas < 0) {
             echo json_encode(["success" => false, "mensaje" => "Datos inválidos o faltantes."]);
             exit;
         }
 
         // Actualizar datos del insumo
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock);
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock_piezas, $contenido_estandar);
         $insumo->id_insumo = $id_insumo;
 
         if ($model->actualizar($insumo)) {

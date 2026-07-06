@@ -78,7 +78,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                     <?php else: ?>
                         <?php foreach ($insumos as $ins): ?>
                             <!-- Resaltar visualmente si el insumo está bajo la cuota mínima de 20 unidades -->
-                            <?php $lowStock = ($ins['stock'] <= 20); ?>
+                            <?php $lowStock = ($ins['stock_piezas'] <= 20); ?>
                             <tr class="border-bottom insumo-row">
                                 <td class="py-3">
                                     <div class="d-flex flex-column">
@@ -94,7 +94,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                                 </td>
                                 <td class="text-end">
                                     <span class="<?php echo $lowStock ? 'text-danger fw-bold' : 'text-dark fw-medium'; ?>">
-                                        <?php echo number_format($ins['stock'], 2); ?>
+                                        <?php echo number_format($ins['stock_piezas'], 2); ?>
                                     </span>
                                 </td>
                                 <td class="text-muted">
@@ -115,7 +115,8 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                                                     data-categoria="<?php echo $ins['categoria']; ?>"
                                                     data-unidad="<?php echo $ins['unidad']; ?>"
                                                     data-precio="<?php echo $ins['precio_unitario']; ?>"
-                                                    data-stock="<?php echo $ins['stock']; ?>"
+                                                    data-stock="<?php echo $ins['stock_piezas']; ?>"
+                                                    data-contenido="<?php echo htmlspecialchars($ins['contenido_estandar'] ?? ''); ?>"
                                                     title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </button>
@@ -182,6 +183,16 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                             <input type="number" class="form-control" id="new_stock" step="0.01" min="0" placeholder="0.00" required>
                         </div>
                     </div>
+                    <!-- Checkbox: Activa el modal de pesaje en balanza al momento de realizar la venta -->
+                    <div class="mt-3 p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="new_requiere_pesaje" style="width: 2.5em; height: 1.3em; cursor: pointer;">
+                            <label class="form-check-label fw-semibold ms-2" for="new_requiere_pesaje" style="font-size: 13px; cursor: pointer;">
+                                <i class="bi bi-moisture text-success me-1"></i>Requiere pesaje en balanza
+                            </label>
+                            <div class="text-muted mt-1" style="font-size: 11px; padding-left: 3.5em;">Al activar esto, en cada venta se pedirá el peso del producto (Ej: pavos vivos).</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light fw-semibold" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
@@ -235,6 +246,16 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                             <input type="number" class="form-control" id="edit_stock" step="0.01" min="0" required>
                         </div>
                     </div>
+                    <!-- Checkbox: Activa el modal de pesaje en balanza al momento de realizar la venta -->
+                    <div class="mt-3 p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="edit_requiere_pesaje" style="width: 2.5em; height: 1.3em; cursor: pointer;">
+                            <label class="form-check-label fw-semibold ms-2" for="edit_requiere_pesaje" style="font-size: 13px; cursor: pointer;">
+                                <i class="bi bi-moisture text-success me-1"></i>Requiere pesaje en balanza
+                            </label>
+                            <div class="text-muted mt-1" style="font-size: 11px; padding-left: 3.5em;">Al activar esto, en cada venta se pedirá el peso del producto (Ej: pavos vivos).</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light fw-semibold" data-bs-dismiss="modal" style="border-radius: 8px;">Cancelar</button>
@@ -278,12 +299,15 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const id_unidad = document.getElementById('new_unidad').value;
                 const precio_unitario = document.getElementById('new_precio').value;
                 const stock = document.getElementById('new_stock').value;
+                // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
+                const requiere_pesaje = document.getElementById('new_requiere_pesaje').checked;
+                const contenido_estandar = requiere_pesaje ? null : 0;
 
                 try {
                     const response = await fetch('./controllers/C_Insumo.php?action=crear', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nombre, id_categoria, id_unidad, precio_unitario, stock })
+                        body: JSON.stringify({ nombre, id_categoria, id_unidad, precio_unitario, stock, contenido_estandar })
                     });
                     const data = await response.json();
 
@@ -320,6 +344,10 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 document.getElementById('edit_nombre').value = btn.dataset.nombre;
                 document.getElementById('edit_precio').value = btn.dataset.precio;
                 document.getElementById('edit_stock').value = btn.dataset.stock;
+
+                // Poblar el checkbox: si contenido_estandar está vacío o es null → el insumo requiere pesaje
+                const contenido = btn.dataset.contenido;
+                document.getElementById('edit_requiere_pesaje').checked = (!contenido || contenido === '' || contenido === 'null');
                 
                 // Mapear los dropdown de categoría y unidades dinámicamente
                 Array.from(selectCat.options).forEach(opt => {
@@ -344,12 +372,15 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const id_unidad = document.getElementById('edit_unidad').value;
                 const precio_unitario = document.getElementById('edit_precio').value;
                 const stock = document.getElementById('edit_stock').value;
+                // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
+                const requiere_pesaje = document.getElementById('edit_requiere_pesaje').checked;
+                const contenido_estandar = requiere_pesaje ? null : 0;
 
                 try {
                     const response = await fetch('./controllers/C_Insumo.php?action=actualizar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_insumo, nombre, id_categoria, id_unidad, precio_unitario, stock })
+                        body: JSON.stringify({ id_insumo, nombre, id_categoria, id_unidad, precio_unitario, stock, contenido_estandar })
                     });
                     const data = await response.json();
 

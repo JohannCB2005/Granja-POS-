@@ -35,7 +35,7 @@ class M_Insumo {
     public function registrar(Insumo $insumo) {
         try {
             $sql = "INSERT INTO insumos (id_categoria, id_unidad, nombre, precio_unitario, 
-                    stock, estado) VALUES (?, ?, ?, ?, ?, 1)";
+                    stock_piezas, contenido_estandar, estado) VALUES (?, ?, ?, ?, ?, ?, 1)";
             $stmt = $this->conexion->prepare($sql);
             
             $stmt->execute([
@@ -43,7 +43,8 @@ class M_Insumo {
                 $insumo->id_unidad,
                 $insumo->nombre,
                 $insumo->precio_unitario,
-                $insumo->stock
+                $insumo->stock_piezas,
+                $insumo->contenido_estandar  // NULL = peso variable (pavos), número = peso fijo (sacos)
             ]);
             
             return true;
@@ -59,8 +60,9 @@ class M_Insumo {
      */
     public function listar() {
         try {
-            $sql = "SELECT i.id_insumo, c.nombre AS categoria, u.nombre AS unidad, 
-                    u.abreviatura, i.nombre, i.precio_unitario, i.stock, i.estado 
+            $sql = "SELECT i.id_insumo, i.id_categoria, i.id_unidad, c.nombre AS categoria,
+                    u.nombre AS unidad, u.abreviatura, i.nombre, i.precio_unitario,
+                    i.stock_piezas, i.contenido_estandar, i.estado 
                     FROM insumos i
                     INNER JOIN categorias c ON i.id_categoria = c.id_categoria
                     INNER JOIN unidades_medida u ON i.id_unidad = u.id_unidad
@@ -100,7 +102,7 @@ class M_Insumo {
     public function actualizar(Insumo $insumo) {
         try {
             $sql = "UPDATE insumos SET id_categoria = ?, id_unidad = ?, nombre = ?, 
-                    precio_unitario = ?, stock = ? WHERE id_insumo = ?";
+                    precio_unitario = ?, stock_piezas = ?, contenido_estandar = ? WHERE id_insumo = ?";
             $stmt = $this->conexion->prepare($sql);
             
             $stmt->execute([
@@ -108,7 +110,8 @@ class M_Insumo {
                 $insumo->id_unidad,
                 $insumo->nombre,
                 $insumo->precio_unitario,
-                $insumo->stock,
+                $insumo->stock_piezas,
+                $insumo->contenido_estandar,  // NULL = peso variable (pavos)
                 $insumo->id_insumo
             ]);
             
