@@ -1,0 +1,60 @@
+<?php
+session_start();
+if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
+    echo json_encode(["success" => false, "mensaje" => "Acceso denegado."]);
+    exit;
+}
+
+require_once '../models/M_Reporte.php';
+
+$action = isset($_GET['action']) ? $_GET['action'] : '';
+$model = new M_Reporte();
+
+// Obtener parámetros comunes
+$desde = isset($_GET['desde']) && !empty($_GET['desde']) ? $_GET['desde'] : date('Y-m-d');
+$hasta = isset($_GET['hasta']) && !empty($_GET['hasta']) ? $_GET['hasta'] : date('Y-m-d');
+$agrupacion = isset($_GET['agrupacion']) ? $_GET['agrupacion'] : 'dia';
+
+switch ($action) {
+    case 'dashboard_data':
+        $kpis = $model->getKPIs($desde, $hasta);
+        $ventas_periodo = $model->getVentasPorPeriodo($desde, $hasta, $agrupacion);
+        $ventas_comprobante = $model->getVentasPorComprobante($desde, $hasta);
+        $top_insumos = $model->getTopInsumos($desde, $hasta, 5);
+        
+        echo json_encode([
+            "success" => true,
+            "data" => [
+                "kpis" => $kpis,
+                "tendencia" => $ventas_periodo,
+                "comprobantes" => $ventas_comprobante,
+                "top_insumos" => $top_insumos
+            ]
+        ]);
+        break;
+
+    case 'ventas_list':
+        $ventas = $model->getVentasDetalladas($desde, $hasta);
+        echo json_encode(["success" => true, "data" => $ventas]);
+        break;
+
+    case 'inventario_list':
+        $stock = $model->getEstadoStock();
+        echo json_encode(["success" => true, "data" => $stock]);
+        break;
+
+    case 'clientes_list':
+        $clientes = $model->getTopClientes($desde, $hasta, 100); // 100 clientes
+        echo json_encode(["success" => true, "data" => $clientes]);
+        break;
+        
+    case 'vendedores_list':
+        $vendedores = $model->getVentasPorVendedor($desde, $hasta);
+        echo json_encode(["success" => true, "data" => $vendedores]);
+        break;
+
+    default:
+        echo json_encode(["success" => false, "mensaje" => "Acción no válida."]);
+        break;
+}
+?>

@@ -418,6 +418,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 <input type="hidden" id="modalNacionalidad" value="PE">
                 <input type="hidden" id="modalCodBarra" value="">
                 <input type="hidden" id="modalDireccion" value="">
+                <input type="hidden" id="modalApellidos" value="">
                 <input type="checkbox" id="modalAgenteRetencion" class="d-none">
 
                 <div class="row g-3">
@@ -650,7 +651,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             let dropdownHtml = '';
             if (matches.length > 0) {
                 matches.forEach(c => {
-                    const label = `${c.nombres_razon_social}${c.apellidos ? ', ' + c.apellidos : ''}`;
+                    const label = c.apellidos ? `${c.apellidos}, ${c.nombres_razon_social}` : c.nombres_razon_social;
                     dropdownHtml += `
                         <button type="button" class="client-dropdown-item client-opt"
                             data-id="${c.id_cliente}"
@@ -761,6 +762,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             hideAutocompleteDropdown();
             
             modalNombre.value = '';
+            document.getElementById('modalApellidos').value = '';
             modalNombreComercial.value = '';
             modalDiasCredito.value = '0';
             modalCodInterno.value = '';
@@ -841,6 +843,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 
                 if (res.success) {
                     modalNombre.value = res.data.nombre;
+                    document.getElementById('modalApellidos').value = res.data.apellidos || '';
                     modalDireccion.value = res.data.direccion;
                     modalTipoCliente.value = res.data.tipo_cliente;
 
@@ -860,10 +863,23 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         modalSaveClientBtn.addEventListener('click', async () => {
             const tipo_documento = parseInt(modalTipoDoc.value);
             const numero_documento = modalNumDoc.value.trim();
-            const nombres_razon_social = modalNombre.value.trim();
+            const fullName = modalNombre.value.trim();
+            const storedApellidos = document.getElementById('modalApellidos').value.trim();
             const direccion = modalDireccion.value.trim();
             const telefono = modalTelefono.value.trim();
             const tipo_cliente = parseInt(modalTipoCliente.value);
+
+            // Separar nombres y apellidos del nombre completo
+            let nombres_razon_social = fullName;
+            let apellidos = storedApellidos;
+            if (fullName.indexOf(',') !== -1) {
+                // Formato "APELLIDOS, NOMBRES" - extraer cada parte
+                const parts = fullName.split(',');
+                if (!apellidos) {
+                    apellidos = parts[0].trim();
+                }
+                nombres_razon_social = parts.slice(1).join(',').trim();
+            }
 
             if (numero_documento === '' || nombres_razon_social === '') {
                 Swal.fire({ icon: 'warning', title: 'Campos obligatorios', text: 'Debe ingresar el Número de documento y el Nombre / Razón Social.', confirmButtonColor: '#15803d' });
@@ -880,7 +896,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                         tipo_documento,
                         numero_documento,
                         nombres_razon_social,
-                        apellidos: '',
+                        apellidos,
                         direccion,
                         telefono,
                         tipo_cliente
@@ -896,7 +912,8 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     clientsList.push(newCli);
 
                     // Seleccionarlo automáticamente
-                    selectClient(newCli.id_cliente, newCli.numero_documento, `${newCli.nombres_razon_social} ${newCli.apellidos || ''}`);
+                    const cliLabel = newCli.apellidos ? `${newCli.apellidos}, ${newCli.nombres_razon_social}` : newCli.nombres_razon_social;
+                    selectClient(newCli.id_cliente, newCli.numero_documento, cliLabel);
 
                     const modalEl = document.getElementById('nuevoClienteModal');
                     const modalInstance = bootstrap.Modal.getInstance(modalEl);

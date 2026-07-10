@@ -65,20 +65,24 @@ $clientes = $modelCliente->listarClientes();
                             <tr class="border-bottom cliente-row">
                                 <td class="py-3">
                                     <div class="d-flex flex-column">
-                                        <span class="fw-semibold text-dark"><?php echo htmlspecialchars($cli['nombres_razon_social'] . ' ' . $cli['apellidos']); ?></span>
+                                        <span class="fw-semibold text-dark"><?php
+                                            $ap = $cli['apellidos'] ?? '';
+                                            $nm = $cli['nombres_razon_social'] ?? '';
+                                            echo htmlspecialchars($ap ? $ap . ', ' . $nm : $nm);
+                                        ?></span>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <span class="text-dark fw-medium"><?php echo htmlspecialchars($cli['numero_documento']); ?></span>
+                                        <span class="text-dark fw-medium"><?php echo htmlspecialchars($cli['numero_documento'] ?? ''); ?></span>
                                         <small class="text-muted" style="font-size: 11px;"><?php echo $cli['tipo_documento'] == 1 ? 'DNI' : 'RUC'; ?></small>
                                     </div>
                                 </td>
                                 <td class="text-muted">
-                                    <?php echo htmlspecialchars($cli['telefono'] ? $cli['telefono'] : '-'); ?>
+                                    <?php echo htmlspecialchars(($cli['telefono'] ?? '') ? $cli['telefono'] : '-'); ?>
                                 </td>
                                 <td class="text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    <?php echo htmlspecialchars($cli['direccion'] ? $cli['direccion'] : '-'); ?>
+                                    <?php echo htmlspecialchars(($cli['direccion'] ?? '') ? $cli['direccion'] : '-'); ?>
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
@@ -96,11 +100,11 @@ $clientes = $modelCliente->listarClientes();
                                         <button class="btn btn-link text-muted p-1 hover-text-primary edit-cliente-btn" 
                                                 data-id="<?php echo $cli['id_cliente']; ?>"
                                                 data-tipodoc="<?php echo $cli['tipo_documento']; ?>"
-                                                data-numdoc="<?php echo htmlspecialchars($cli['numero_documento']); ?>"
-                                                data-nombres="<?php echo htmlspecialchars($cli['nombres_razon_social']); ?>"
-                                                data-apellidos="<?php echo htmlspecialchars($cli['apellidos']); ?>"
-                                                data-direccion="<?php echo htmlspecialchars($cli['direccion']); ?>"
-                                                data-telefono="<?php echo htmlspecialchars($cli['telefono']); ?>"
+                                                data-numdoc="<?php echo htmlspecialchars($cli['numero_documento'] ?? ''); ?>"
+                                                data-nombres="<?php echo htmlspecialchars($cli['nombres_razon_social'] ?? ''); ?>"
+                                                data-apellidos="<?php echo htmlspecialchars($cli['apellidos'] ?? ''); ?>"
+                                                data-direccion="<?php echo htmlspecialchars($cli['direccion'] ?? ''); ?>"
+                                                data-telefono="<?php echo htmlspecialchars($cli['telefono'] ?? ''); ?>"
                                                 data-tipocli="<?php echo $cli['tipo_cliente']; ?>"
                                                 title="Editar">
                                             <i class="bi bi-pencil-fill"></i>
@@ -109,7 +113,11 @@ $clientes = $modelCliente->listarClientes();
                                         <?php if ($cli['id_cliente'] != 1): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger delete-cliente-btn" 
                                                     data-id="<?php echo $cli['id_cliente']; ?>"
-                                                    data-nombre="<?php echo htmlspecialchars($cli['nombres_razon_social'] . ' ' . $cli['apellidos']); ?>"
+                                                    data-nombre="<?php
+                                                        $ap = $cli['apellidos'] ?? '';
+                                                        $nm = $cli['nombres_razon_social'] ?? '';
+                                                        echo htmlspecialchars($ap ? $ap . ', ' . $nm : $nm);
+                                                    ?>"
                                                     title="Eliminar">
                                                 <i class="bi bi-trash-fill"></i>
                                             </button>
@@ -134,8 +142,7 @@ $clientes = $modelCliente->listarClientes();
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="box-shadow: none;"></button>
             </div>
             <div class="modal-body p-4" style="font-size: 13px;">
-                <!-- Campos ocultos requeridos para compatibilidad de registro -->
-                <input type="hidden" id="new_apellidos" value="">
+                <!-- Campo oculto requerido para compatibilidad de registro -->
                 <input type="hidden" id="new_direccion" value="">
 
                 <div class="row g-3">
@@ -156,9 +163,13 @@ $clientes = $modelCliente->listarClientes();
                         </div>
                     </div>
 
-                    <div class="col-12">
-                        <label class="form-label text-muted fw-semibold mb-1">Nombre / Razón Social <span class="text-danger">*</span></label>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Nombres / Razón Social <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="new_nombres" placeholder="Nombres o Razón Social" style="box-shadow: none; height: 38px; font-size: 13.5px;" autocomplete="off">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted fw-semibold mb-1">Apellidos (Opcional)</label>
+                        <input type="text" class="form-control" id="new_apellidos" placeholder="Apellidos" style="box-shadow: none; height: 38px; font-size: 13.5px;" autocomplete="off">
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -312,7 +323,8 @@ $clientes = $modelCliente->listarClientes();
                 const data = await res.json();
 
                 if (data.success) {
-                    new_nombres.value   = data.data.nombre  || '';
+                    new_nombres.value   = data.data.nombres  || data.data.nombre || '';
+                    document.getElementById('new_apellidos').value = data.data.apellidos || '';
                     new_direccion.value = data.data.direccion || '';
                     new_tipoCli.value   = data.data.tipo_cliente || '1';
                     Swal.fire({ icon:'success', title:'¡Datos obtenidos!', text:'Se cargaron los datos automáticamente.', showConfirmButton:false, timer:1400 });
@@ -388,8 +400,19 @@ $clientes = $modelCliente->listarClientes();
                 document.getElementById('edit_id').value = btn.dataset.id;
                 document.getElementById('edit_tipo_doc').value = btn.dataset.tipodoc;
                 document.getElementById('edit_num_doc').value = btn.dataset.numdoc;
-                document.getElementById('edit_nombres').value = btn.dataset.nombres;
-                document.getElementById('edit_apellidos').value = btn.dataset.apellidos;
+                
+                // Manejar datos antiguos donde todo el nombre se guardó en nombres_razon_social
+                let nombres = btn.dataset.nombres || '';
+                let apellidos = btn.dataset.apellidos || '';
+                if (!apellidos && nombres.indexOf(',') !== -1) {
+                    // Formato "APELLIDOS, NOMBRES" - separar automáticamente
+                    const partes = nombres.split(',');
+                    apellidos = partes[0].trim();
+                    nombres = partes.slice(1).join(',').trim();
+                }
+                document.getElementById('edit_nombres').value = nombres;
+                document.getElementById('edit_apellidos').value = apellidos;
+                
                 document.getElementById('edit_direccion').value = btn.dataset.direccion;
                 document.getElementById('edit_telefono').value = btn.dataset.telefono;
                 document.getElementById('edit_tipo_cli').value = btn.dataset.tipocli;

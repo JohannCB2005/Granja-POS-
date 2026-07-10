@@ -101,11 +101,32 @@ switch ($action) {
 
         // Mapear los datos retornados para el formulario frontend
         if ($tipo === 'dni') {
-            if (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
-                $mapped['nombre'] = $apiData['nombre_completo'];
-            } else {
-                $mapped['nombre'] = trim(($apiData['nombres'] ?? '') . ' ' . ($apiData['apellido_paterno'] ?? '') . ' ' . ($apiData['apellido_materno'] ?? ''));
+            // Extraer nombres y apellidos por separado
+            $soloNombres = '';
+            $soloApellidos = '';
+
+            if (isset($apiData['nombres']) && !empty($apiData['nombres'])) {
+                $soloNombres = trim($apiData['nombres']);
+                $soloApellidos = trim(($apiData['apellido_paterno'] ?? '') . ' ' . ($apiData['apellido_materno'] ?? ''));
+            } elseif (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
+                if (strpos($apiData['nombre_completo'], ',') !== false) {
+                    $partes = explode(',', $apiData['nombre_completo'], 2);
+                    $soloApellidos = trim($partes[0]);
+                    $soloNombres = trim($partes[1]);
+                } else {
+                    $soloNombres = $apiData['nombre_completo'];
+                }
             }
+
+            // 'nombre' = nombre completo para formularios de un solo campo (formato: APELLIDOS, NOMBRES)
+            if (!empty($soloApellidos)) {
+                $mapped['nombre'] = $soloApellidos . ', ' . $soloNombres;
+            } else {
+                $mapped['nombre'] = $soloNombres;
+            }
+            // Campos separados para formularios con campos individuales
+            $mapped['nombres'] = $soloNombres;
+            $mapped['apellidos'] = $soloApellidos;
             $mapped['direccion'] = $apiData['direccion'] ?? '';
             $mapped['tipo_cliente'] = 1; // Persona Natural
         } else {
@@ -130,6 +151,8 @@ switch ($action) {
             }
 
             $mapped['nombre'] = $apiData['nombre_o_razon_social'] ?? '';
+            $mapped['nombres'] = $mapped['nombre'];
+            $mapped['apellidos'] = '';
             $mapped['direccion'] = $apiData['direccion'] ?? '';
             $mapped['tipo_cliente'] = strpos($numero_documento, '20') === 0 ? 2 : 1; // 2 = Jurídica (20), 1 = Natural (10)
         }
@@ -218,11 +241,19 @@ switch ($action) {
         $tipo_cliente = 1;
 
         if ($tipo === 'dni') {
-            if (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
-                $nombres_razon_social = $apiData['nombre_completo'];
-            } else {
-                $nombres_razon_social = $apiData['nombres'];
+            // Separar nombres y apellidos correctamente
+            if (isset($apiData['nombres']) && !empty($apiData['nombres'])) {
+                $nombres_razon_social = trim($apiData['nombres']);
                 $apellidos = trim(($apiData['apellido_paterno'] ?? '') . ' ' . ($apiData['apellido_materno'] ?? ''));
+            } elseif (isset($apiData['nombre_completo']) && !empty($apiData['nombre_completo'])) {
+                // nombre_completo suele venir como "APELLIDOS, NOMBRES" o "NOMBRES APELLIDOS"
+                if (strpos($apiData['nombre_completo'], ',') !== false) {
+                    $partes = explode(',', $apiData['nombre_completo'], 2);
+                    $apellidos = trim($partes[0]);
+                    $nombres_razon_social = trim($partes[1]);
+                } else {
+                    $nombres_razon_social = $apiData['nombre_completo'];
+                }
             }
             $direccion = $apiData['direccion'] ?? '';
             $tipo_cliente = 1;

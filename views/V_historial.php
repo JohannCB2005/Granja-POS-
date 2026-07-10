@@ -89,7 +89,8 @@ $ventas = $modelVenta->listar($id_vendedor);
                     <?php else: ?>
                         <?php foreach ($ventas as $v): ?>
                             <tr class="border-bottom venta-row" 
-                                data-cliente="<?php echo htmlspecialchars(strtolower($v['cliente'])); ?>"
+                                                data-cliente="<?php echo htmlspecialchars(strtolower($v['cliente'])); ?>"
+                                data-dni="<?php echo htmlspecialchars($v['numero_documento'] ?? ''); ?>"
                                 data-codigo="v-<?php echo str_pad($v['id_venta'], 6, '0', STR_PAD_LEFT); ?>"
                                 data-estado="<?php echo $v['estado'] == 1 ? 'Completada' : 'Anulada'; ?>"
                                 data-tipo="<?php echo $v['tipo_comprobante']; ?>"
@@ -306,7 +307,10 @@ $ventas = $modelVenta->listar($id_vendedor);
             const hasta = dateHasta.value; 
 
             rows.forEach(row => {
-                const textMatch = row.innerText.toLowerCase().includes(query);
+                const cliente = row.dataset.cliente || '';
+                const dni = row.dataset.dni || '';
+                const codigo = row.dataset.codigo || '';
+                const textMatch = cliente.includes(query) || dni.includes(query) || codigo.includes(query);
                 const statusMatch = (status === 'all' || row.dataset.estado === status);
                 const typeMatch = (type === 'all' || row.dataset.tipo === type);
                 

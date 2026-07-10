@@ -215,6 +215,7 @@ CREATE PROCEDURE sp_registrar_cliente(
 )
 BEGIN
     DECLARE v_id_persona INT DEFAULT NULL;
+    DECLARE v_id_cliente INT DEFAULT NULL;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -226,10 +227,15 @@ BEGIN
     SELECT id_persona INTO v_id_persona FROM personas WHERE numero_documento = p_numero_documento LIMIT 1;
 
     IF v_id_persona IS NULL THEN
+        -- Persona nueva: insertar persona y cliente
         INSERT INTO personas (tipo_documento, numero_documento, nombres_razon_social, apellidos, direccion, telefono, estado)
         VALUES (p_tipo_documento, p_numero_documento, p_nombres_razon_social, p_apellidos, p_direccion, p_telefono, 1);
         SET v_id_persona = LAST_INSERT_ID();
+
+        INSERT INTO clientes (id_persona, tipo_cliente)
+        VALUES (v_id_persona, p_tipo_cliente);
     ELSE
+        -- Persona existente: reactivar y actualizar datos
         UPDATE personas SET
             tipo_documento       = p_tipo_documento,
             nombres_razon_social = p_nombres_razon_social,
@@ -238,10 +244,19 @@ BEGIN
             telefono             = p_telefono,
             estado               = 1
         WHERE id_persona = v_id_persona;
-    END IF;
 
-    INSERT INTO clientes (id_persona, tipo_cliente)
-    VALUES (v_id_persona, p_tipo_cliente);
+        -- Verificar si ya existe el cliente vinculado
+        SELECT id_cliente INTO v_id_cliente FROM clientes WHERE id_persona = v_id_persona LIMIT 1;
+
+        IF v_id_cliente IS NULL THEN
+            -- No existía como cliente aún: insertar
+            INSERT INTO clientes (id_persona, tipo_cliente)
+            VALUES (v_id_persona, p_tipo_cliente);
+        ELSE
+            -- Ya existe como cliente: solo actualizar tipo
+            UPDATE clientes SET tipo_cliente = p_tipo_cliente WHERE id_cliente = v_id_cliente;
+        END IF;
+    END IF;
 
     COMMIT;
 END$$

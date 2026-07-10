@@ -6,8 +6,8 @@ class Conexion {
     private function __construct() {
         $host = 'localhost';
         $dbname = 'granja_pos';
-        $user = 'root';
-        $pass = '';
+        $user = 'granja_user';
+        $pass = 'granja2026';
         
         $opciones = array(
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',

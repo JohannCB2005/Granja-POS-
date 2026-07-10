@@ -69,25 +69,25 @@ $roles = $modelRol->listar();
                         <?php foreach ($usuarios as $usr): ?>
                             <tr class="border-bottom usuario-row">
                                 <td class="py-3">
-                                    <div class="fw-semibold text-dark"><?php echo htmlspecialchars($usr['nombres_razon_social'] . ' ' . $usr['apellidos']); ?></div>
+                                    <div class="fw-semibold text-dark"><?php echo htmlspecialchars(($usr['nombres_razon_social'] ?? '') . ' ' . ($usr['apellidos'] ?? '')); ?></div>
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <span class="text-dark fw-medium"><?php echo htmlspecialchars($usr['numero_documento']); ?></span>
+                                        <span class="text-dark fw-medium"><?php echo htmlspecialchars($usr['numero_documento'] ?? ''); ?></span>
                                         <small class="text-muted" style="font-size: 11px;"><?php echo $usr['tipo_documento'] == 1 ? 'DNI' : 'RUC'; ?></small>
                                     </div>
                                 </td>
                                 <td class="font-mono text-dark fw-medium">
-                                    <?php echo htmlspecialchars($usr['username']); ?>
+                                    <?php echo htmlspecialchars($usr['username'] ?? ''); ?>
                                 </td>
                                 <td>
                                     <!-- Insignias diferenciadas por rol de usuario -->
                                     <span class="badge <?php echo $usr['rol'] === 'Administrador' ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-20' : 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20'; ?> px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
-                                        <?php echo htmlspecialchars($usr['rol']); ?>
+                                        <?php echo htmlspecialchars($usr['rol'] ?? ''); ?>
                                     </span>
                                 </td>
                                 <td class="text-muted">
-                                    <?php echo htmlspecialchars($usr['telefono'] ? $usr['telefono'] : '-'); ?>
+                                    <?php echo htmlspecialchars(($usr['telefono'] ?? '') ? $usr['telefono'] : '-'); ?>
                                 </td>
                                 <td>
                                     <span class="<?php echo $usr['estado'] == 1 ? 'gp-badge-success' : 'gp-badge-danger'; ?>">
@@ -100,13 +100,13 @@ $roles = $modelRol->listar();
                                         <button class="btn btn-link text-muted p-1 hover-text-primary edit-usuario-btn" 
                                                 data-id="<?php echo $usr['id_usuario']; ?>"
                                                 data-tipodoc="<?php echo $usr['tipo_documento']; ?>"
-                                                data-numdoc="<?php echo htmlspecialchars($usr['numero_documento']); ?>"
-                                                data-nombres="<?php echo htmlspecialchars($usr['nombres_razon_social']); ?>"
-                                                data-apellidos="<?php echo htmlspecialchars($usr['apellidos']); ?>"
-                                                data-direccion="<?php echo htmlspecialchars($usr['direccion']); ?>"
-                                                data-telefono="<?php echo htmlspecialchars($usr['telefono']); ?>"
+                                                data-numdoc="<?php echo htmlspecialchars($usr['numero_documento'] ?? ''); ?>"
+                                                data-nombres="<?php echo htmlspecialchars($usr['nombres_razon_social'] ?? ''); ?>"
+                                                data-apellidos="<?php echo htmlspecialchars($usr['apellidos'] ?? ''); ?>"
+                                                data-direccion="<?php echo htmlspecialchars($usr['direccion'] ?? ''); ?>"
+                                                data-telefono="<?php echo htmlspecialchars($usr['telefono'] ?? ''); ?>"
                                                 data-rolid="<?php echo $usr['id_rol']; ?>"
-                                                data-username="<?php echo htmlspecialchars($usr['username']); ?>"
+                                                data-username="<?php echo htmlspecialchars($usr['username'] ?? ''); ?>"
                                                 title="Editar">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
@@ -114,7 +114,7 @@ $roles = $modelRol->listar();
                                         <?php if ($usr['id_usuario'] != $_SESSION['id_usuario']): ?>
                                             <button class="btn btn-link text-muted p-1 hover-text-danger delete-usuario-btn" 
                                                     data-id="<?php echo $usr['id_usuario']; ?>"
-                                                    data-nombre="<?php echo htmlspecialchars($usr['nombres_razon_social'] . ' ' . $usr['apellidos']); ?>"
+                                                    data-nombre="<?php echo htmlspecialchars(($usr['nombres_razon_social'] ?? '') . ' ' . ($usr['apellidos'] ?? '')); ?>"
                                                     title="Eliminar">
                                                 <i class="bi bi-trash-fill"></i>
                                             </button>
