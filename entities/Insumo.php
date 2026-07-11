@@ -15,6 +15,7 @@ class Insumo {
     public $id_unidad;
     public $nombre;
     public $precio_unitario;
+    public $costo_produccion;    // Costo base por lote para cálculo de rentabilidad
     public $stock_piezas;        // Cantidad de piezas/unidades físicas en almacén
     public $contenido_estandar;  // Kg/L por pieza. NULL = peso variable (aves)
     public $estado;
@@ -24,6 +25,7 @@ class Insumo {
         $id_unidad = null,
         $nombre = '',
         $precio_unitario = 0.0,
+        $costo_produccion = 0.0,
         $stock_piezas = 0.0,
         $contenido_estandar = null,
         $id_insumo = null
@@ -33,6 +35,7 @@ class Insumo {
         $this->id_unidad          = $id_unidad;
         $this->nombre             = $nombre;
         $this->precio_unitario    = $precio_unitario;
+        $this->costo_produccion   = $costo_produccion;
         $this->stock_piezas       = $stock_piezas;
         $this->contenido_estandar = $contenido_estandar;
         $this->estado             = 1;

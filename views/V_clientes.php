@@ -5,8 +5,8 @@ if (!isset($_SESSION['id_usuario'])) {
     exit;
 }
 
-// Cargar el modelo de Cliente para el listado inicial
 require_once dirname(__DIR__) . '/models/M_Cliente.php';
+
 $modelCliente = M_Cliente::singleton();
 $clientes = $modelCliente->listarClientes();
 ?>
@@ -86,7 +86,10 @@ $clientes = $modelCliente->listarClientes();
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary px-2.5 py-1.5 fw-semibold" style="font-size: 11px;">
-                                        <?php echo $cli['tipo_cliente'] == 1 ? 'Persona Natural' : 'Persona Jurídica'; ?>
+                                        <?php 
+                                            if ($cli['tipo_cliente'] == 1) echo 'Persona Natural';
+                                            elseif ($cli['tipo_cliente'] == 2) echo 'Persona Jurídica';
+                                        ?>
                                     </span>
                                 </td>
                                 <td>
@@ -284,6 +287,26 @@ $clientes = $modelCliente->listarClientes();
         const new_tipoCli     = document.getElementById('new_tipo_cli');
         const new_direccion   = document.getElementById('new_direccion');
         const new_saveBtn     = document.getElementById('new_saveClientBtn');
+        const new_planillaFields = document.getElementById('new_planilla_fields');
+
+        // Toggle campos de planilla
+        new_tipoCli.addEventListener('change', () => {
+            if (new_tipoCli.value === '3') {
+                new_planillaFields.style.display = 'block';
+            } else {
+                new_planillaFields.style.display = 'none';
+            }
+        });
+
+        const edit_tipoCli = document.getElementById('edit_tipo_cli');
+        const edit_planillaFields = document.getElementById('edit_planilla_fields');
+        edit_tipoCli.addEventListener('change', () => {
+            if (edit_tipoCli.value === '3') {
+                edit_planillaFields.style.display = 'flex';
+            } else {
+                edit_planillaFields.style.display = 'none';
+            }
+        });
 
         // Alternar el texto del botón y resetear inputs al cambiar de tipo de documento
         new_tipoDoc.addEventListener('change', () => {
@@ -323,6 +346,8 @@ $clientes = $modelCliente->listarClientes();
                 const data = await res.json();
 
                 if (data.success) {
+                    // Si es crear desde API, asignamos Trabajador UNP si era tipo_cliente==3, aunque la API no devuelva 3.
+                    // Pero la API solo devuelve 1 o 2.
                     new_nombres.value   = data.data.nombres  || data.data.nombre || '';
                     document.getElementById('new_apellidos').value = data.data.apellidos || '';
                     new_direccion.value = data.data.direccion || '';
@@ -353,7 +378,7 @@ $clientes = $modelCliente->listarClientes();
             const telefono             = document.getElementById('new_telefono').value.trim();
             const tipo_cliente         = new_tipoCli.value;
             const direccion            = new_direccion.value.trim();
-
+            
             if (!numero_documento || !nombres_razon_social) {
                 Swal.fire({ icon:'warning', title:'Campos obligatorios', text:'El número de documento y el nombre son requeridos.', confirmButtonColor:'#15803d' });
                 return;
@@ -364,7 +389,10 @@ $clientes = $modelCliente->listarClientes();
                 const response = await fetch('./controllers/C_Cliente.php?action=crear', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tipo_documento, numero_documento, nombres_razon_social, apellidos, telefono, tipo_cliente, direccion })
+                    body: JSON.stringify({ 
+                        tipo_documento, numero_documento, nombres_razon_social, apellidos, 
+                        telefono, tipo_cliente, direccion
+                    })
                 });
                 const data = await response.json();
 
@@ -439,7 +467,10 @@ $clientes = $modelCliente->listarClientes();
                     const response = await fetch('./controllers/C_Cliente.php?action=actualizar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_cliente, tipo_documento, numero_documento, nombres_razon_social, apellidos, telefono, tipo_cliente, direccion })
+                        body: JSON.stringify({ 
+                            id_cliente, tipo_documento, numero_documento, nombres_razon_social, apellidos, 
+                            telefono, tipo_cliente, direccion
+                        })
                     });
                     const data = await response.json();
 

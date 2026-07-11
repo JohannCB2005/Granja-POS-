@@ -189,6 +189,11 @@ body {
     font-size: 11pt;
     padding-top: 8px;
 }
+.totals-table .split td {
+    color: #444;
+    font-size: 9pt;
+    padding-top: 2px;
+}
 
 /* Pie de Página */
 .footer {
@@ -254,6 +259,7 @@ p { margin: 1px 0; }
 
 .total-row { display: flex; justify-content: space-between; font-weight: bold; padding: 2px 0; }
 .total-row.grand { font-size: 1.15em; border-top: 1px solid #000; margin-top: 4px; padding-top: 4px; }
+.total-row.split { font-size: 0.9em; font-weight: normal; color: #444; }
 
 .footer-msg { text-align: center; margin-top: 8px; font-weight: bold; }
 <?php endif; ?>
@@ -285,6 +291,10 @@ p { margin: 1px 0; }
         <div class="info-row"><span class="info-label">Cliente:</span><span class="info-value"><?php echo htmlspecialchars($venta['cliente']); ?></span></div>
         <div class="info-row"><span class="info-label">Doc. / RUC:</span><span class="info-value"><?php echo htmlspecialchars($venta['numero_documento']); ?></span></div>
         <div class="info-row"><span class="info-label">Vendedor:</span><span class="info-value"><?php echo htmlspecialchars($venta['vendedor']); ?></span></div>
+        <div class="info-row"><span class="info-label">Forma de Pago:</span><span class="info-value"><?php echo $venta['metodo_pago'] == 2 ? 'CARGO A PLANILLA' : 'EFECTIVO / TRANSFERENCIA'; ?></span></div>
+        <?php if ($venta['id_vale']): ?>
+        <div class="info-row"><span class="info-label">Vale Aplicado:</span><span class="info-value">Sí</span></div>
+        <?php endif; ?>
         <div class="info-row"><span class="info-label">Estado:</span><span class="info-value"><?php echo $estado; ?></span></div>
     </div>
     <div>
@@ -337,11 +347,21 @@ p { margin: 1px 0; }
             <td class="label">TOTAL A PAGAR: S/</td>
             <td class="value"><?php echo number_format($total, 2); ?></td>
         </tr>
+        <?php if ($venta['pago_vale'] > 0 || $venta['pago_efectivo'] > 0): ?>
+        <tr class="split">
+            <td class="label">Pago con Vale:</td>
+            <td class="value">S/ <?php echo number_format($venta['pago_vale'] ?? 0, 2); ?></td>
+        </tr>
+        <tr class="split">
+            <td class="label">Pago Adicional (<?php echo $venta['metodo_pago'] == 2 ? 'Planilla' : 'Efectivo'; ?>):</td>
+            <td class="value">S/ <?php echo number_format($venta['pago_efectivo'] ?? 0, 2); ?></td>
+        </tr>
+        <?php endif; ?>
     </table>
 </div>
 
 <div class="footer">
-    <p><strong>CONDICIÓN DE PAGO:</strong> Al contado</p>
+    <p><strong>CONDICIÓN DE PAGO:</strong> <?php echo $venta['metodo_pago'] == 2 ? 'Crédito a Planilla' : 'Al contado'; ?></p>
     <p class="thanks">¡Gracias por su compra!</p>
 </div>
 
@@ -371,6 +391,8 @@ p { margin: 1px 0; }
         <tr><td>Cliente:</td><td><?php echo htmlspecialchars($venta['cliente']); ?></td></tr>
         <tr><td>Doc.:</td><td><?php echo htmlspecialchars($venta['numero_documento']); ?></td></tr>
         <tr><td>Vendedor:</td><td><?php echo htmlspecialchars($venta['vendedor']); ?></td></tr>
+        <tr><td>F. Pago:</td><td><?php echo $venta['metodo_pago'] == 2 ? 'CARGO A PLANILLA' : 'EFECTIVO / TRANSF'; ?></td></tr>
+        <?php if ($venta['id_vale']): ?><tr><td>Vale:</td><td>Aplicado</td></tr><?php endif; ?>
         <tr><td>Estado:</td><td><?php echo $estado; ?></td></tr>
     </table>
 </div>
@@ -408,6 +430,10 @@ p { margin: 1px 0; }
 <div class="total-row"><span>OP. GRAVADA:</span><span>S/ <?php echo number_format($subtotal, 2); ?></span></div>
 <div class="total-row"><span>IGV (18%):</span><span>S/ <?php echo number_format($igv, 2); ?></span></div>
 <div class="total-row grand"><span>TOTAL A PAGAR: S/</span><span><?php echo number_format($total, 2); ?></span></div>
+<?php if ($venta['pago_vale'] > 0 || $venta['pago_efectivo'] > 0): ?>
+<div class="total-row split"><span>Pago Vale:</span><span>S/ <?php echo number_format($venta['pago_vale'] ?? 0, 2); ?></span></div>
+<div class="total-row split"><span>Pago <?php echo $venta['metodo_pago'] == 2 ? 'Planilla' : 'Efectivo'; ?>:</span><span>S/ <?php echo number_format($venta['pago_efectivo'] ?? 0, 2); ?></span></div>
+<?php endif; ?>
 
 <hr class="sep" style="margin-top:8px;">
 <p class="footer-msg">¡Gracias por su compra!</p>

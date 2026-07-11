@@ -42,9 +42,17 @@ switch ($action) {
     // Registra una nueva venta con sus respectivas líneas de detalle
     case 'crear':
         $id_usuario = $_SESSION['id_usuario'];
-        $id_cliente = isset($input['id_cliente']) ? intval($input['id_cliente']) : 1; // Por defecto: Público General (ID 1)
+        $id_trabajador = isset($input['id_trabajador']) && $input['id_trabajador'] ? intval($input['id_trabajador']) : null;
+        $id_cliente = isset($input['id_cliente']) && $input['id_cliente'] ? intval($input['id_cliente']) : 1; 
+        
+        // Regla: si es trabajador, el cliente referencial es Público General (1)
+        if ($id_trabajador) {
+            $id_cliente = 1;
+        }
+
         $tipo_comprobante = isset($input['tipo_comprobante']) ? intval($input['tipo_comprobante']) : 1; // 1 = Boleta, 2 = Factura, 3 = Nota de venta
         $total = isset($input['total']) ? floatval($input['total']) : 0.0;
+        $metodo_pago = isset($input['metodo_pago']) ? intval($input['metodo_pago']) : 1;
         $cart = isset($input['cart']) ? $input['cart'] : []; // Elementos del carrito: {id_insumo, cantidad, precio, subtotal}
 
         // Validación inicial
@@ -60,8 +68,12 @@ switch ($action) {
             exit;
         }
 
+        $id_vale = isset($input['id_vale']) && $input['id_vale'] ? intval($input['id_vale']) : null;
+        $pago_efectivo = isset($input['pago_efectivo']) ? floatval($input['pago_efectivo']) : 0.0;
+        $pago_vale = isset($input['pago_vale']) ? floatval($input['pago_vale']) : 0.0;
+
         // Crear la entidad principal de Venta
-        $venta = new Venta($id_usuario, $id_cliente, $tipo_comprobante, $total);
+        $venta = new Venta(null, $id_usuario, $id_cliente, $id_trabajador, '', $tipo_comprobante, $total, $metodo_pago, $id_vale, $pago_efectivo, $pago_vale);
         
         // Cargar los items del carrito dentro de la entidad de venta
         foreach ($cart as $item) {
@@ -79,10 +91,10 @@ switch ($action) {
 
         // Intentar registrar la venta de manera transaccional en la DB (afectará stock e inventario)
         $resultado = $model->registrar($venta);
-        if ($resultado !== false) {
-            echo json_encode(["success" => true, "mensaje" => "Venta registrada con éxito.", "id_venta" => $resultado]);
+        if ($resultado['ok']) {
+            echo json_encode(["success" => true, "mensaje" => "Venta registrada con éxito.", "id_venta" => $resultado['id_venta']]);
         } else {
-            echo json_encode(["success" => false, "mensaje" => "Error al registrar la venta. Verifique el stock disponible de los insumos."]);
+            echo json_encode(["success" => false, "mensaje" => $resultado['mensaje']]);
         }
         break;
 
@@ -112,10 +124,11 @@ switch ($action) {
         }
 
         // Ejecutar proceso de anulación en base de datos
-        if ($model->anular($id_venta)) {
+        $resultadoAnular = $model->anular($id_venta);
+        if ($resultadoAnular['ok']) {
             echo json_encode(["success" => true, "mensaje" => "Venta anulada con éxito. El stock ha sido retornado."]);
         } else {
-            echo json_encode(["success" => false, "mensaje" => "Error al anular la venta."]);
+            echo json_encode(["success" => false, "mensaje" => $resultadoAnular['mensaje']]);
         }
         break;
 
@@ -146,6 +159,19 @@ switch ($action) {
 
         // Obtener detalles desde el modelo de base de datos
         echo json_encode($model->obtenerDetallesPorVenta($id_venta));
+        break;
+
+    case 'reporte_planilla':
+        if ($_SESSION['rol'] !== 'Administrador') {
+            echo json_encode(["success" => false, "mensaje" => "No autorizado."]);
+            exit;
+        }
+        $fecha_inicio = isset($_GET['desde']) ? $_GET['desde'] : date('Y-m-d');
+        $fecha_fin = isset($_GET['hasta']) ? $_GET['hasta'] : date('Y-m-d');
+        $id_dependencia = isset($_GET['id_dependencia']) && $_GET['id_dependencia'] !== '' ? intval($_GET['id_dependencia']) : null;
+        
+        $data = $model->reportePlanilla($fecha_inicio, $fecha_fin, $id_dependencia);
+        echo json_encode(["success" => true, "data" => $data]);
         break;
 
     default:

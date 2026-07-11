@@ -6,27 +6,29 @@ class Cliente extends Persona {
     public $tipo_cliente;
 
     public function __construct(
+        $id_persona = null,
         $tipo_documento = 1,
         $numero_documento = '',
         $nombres_razon_social = '',
-        $apellidos = '',
-        $direccion = '',
-        $telefono = '',
-        $tipo_cliente = 1,
+        $apellidos = null,
+        $direccion = null,
+        $telefono = null,
+        $estado = 1,
         $id_cliente = null,
-        $id_persona = null
+        $tipo_cliente = 1
     ) {
         parent::__construct(
+            $id_persona,
             $tipo_documento,
             $numero_documento,
             $nombres_razon_social,
             $apellidos,
             $direccion,
             $telefono,
-            $id_persona
+            $estado
         );
-        $this->tipo_cliente = $tipo_cliente;
         $this->id_cliente = $id_cliente;
+        $this->tipo_cliente = $tipo_cliente;
     }
 }
 ?>

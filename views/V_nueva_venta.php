@@ -17,7 +17,36 @@ $insumos = $modelInsumo->listar();
 
 // Listar clientes registrados
 $modelCliente = M_Cliente::singleton();
-$clientes = $modelCliente->listarClientes();
+$clientesRaw = $modelCliente->listarClientes();
+
+// Listar trabajadores registrados
+require_once dirname(__DIR__) . '/models/M_Trabajador.php';
+$modelTrabajador = M_Trabajador::singleton();
+$trabajadoresRaw = $modelTrabajador->listar();
+
+$clientes = [];
+foreach ($clientesRaw as $c) {
+    $clientes[] = [
+        'id_cliente' => $c['id_cliente'],
+        'id_trabajador' => null,
+        'tipo_cliente' => $c['tipo_cliente'],
+        'numero_documento' => $c['numero_documento'],
+        'nombres_razon_social' => $c['nombres_razon_social'],
+        'apellidos' => $c['apellidos'],
+        'es_trabajador' => false
+    ];
+}
+foreach ($trabajadoresRaw as $t) {
+    $clientes[] = [
+        'id_cliente' => null,
+        'id_trabajador' => $t['id_trabajador'],
+        'tipo_cliente' => 3, // Trabajador UNP
+        'numero_documento' => $t['numero_documento'],
+        'nombres_razon_social' => $t['nombres_razon_social'],
+        'apellidos' => $t['apellidos'],
+        'es_trabajador' => true
+    ];
+}
 
 // Listar categorías activas para los filtros rápidos
 $modelCat = M_Categoria::singleton();
@@ -29,7 +58,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 ?>
 
 <style>
-    /* ── Menú desplegable de autocompletado de clientes ── */
+    /* ── Menú desplegable de autocompletado de clientes/trabajadores ── */
     #clientAutocompleteDropdown {
         display: none;
         position: absolute;
@@ -183,6 +212,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     </div>
                     <div class="col-12 col-md-8">
                         <input type="hidden" id="cartClientId" value="1">
+                        <input type="hidden" id="cartTrabajadorId" value="">
                         <label class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Cliente</label>
                         <div class="client-autocomplete-wrapper">
                             <div class="input-group input-group-sm">
@@ -319,9 +349,34 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     </div>
                 </div>
 
+                <!-- Banner de Vale Navideño -->
+                <div id="valeNavidenoBanner" class="alert alert-success d-none mb-3 p-2" style="font-size: 13px;">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-ticket-perforated-fill fs-4"></i>
+                        <div class="lh-sm">
+                            <strong>Canjear Vale Navideño</strong>
+                        </div>
+                    </div>
+                    <div class="input-group input-group-sm mb-2" id="valeInputGroup">
+                        <input type="text" id="codigoValeInput" class="form-control text-uppercase" placeholder="Código del vale">
+                        <button class="btn btn-success fw-bold" id="btnAplicarVale">Aplicar</button>
+                    </div>
+                    <div id="valeAplicadoInfo" class="d-none">
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between text-success fw-bold">
+                            <span>Vale Aplicado:</span>
+                            <span id="valeMontoText">S/ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Resumen Financiero Desglosado con IGV -->
                 <div>
                     <div class="bg-light p-3 rounded-3 mb-3" style="font-size: 13px;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="text-muted">Descuento Vale</span>
+                            <span class="fw-semibold text-danger" id="summaryDescuento">S/ 0.00</span>
+                        </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-muted">Subtotal</span>
                             <span class="fw-semibold text-dark" id="summarySubtotal">S/ 0.00</span>
@@ -334,6 +389,14 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                             <span class="fw-bold text-dark" style="font-size: 14px;">Total</span>
                             <span class="fw-bold text-success" style="font-size: 16px;" id="summaryTotal">S/ 0.00</span>
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted mb-1" style="font-size: 12px;">Método de Pago</label>
+                        <select id="metodoPagoSelect" class="form-select form-select-sm text-sm fw-semibold" style="height: 38px; border-color: #ced4da; box-shadow: none;">
+                            <option value="1" selected>Efectivo / Transferencia</option>
+                            <option value="2" id="optPlanilla" disabled>Cargo a Planilla (Solo Trabajadores)</option>
+                        </select>
                     </div>
 
                     <!-- Confirmar Venta -->
@@ -544,6 +607,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         const clearClientSelectionBtn = document.getElementById('clearClientSelectionBtn');
         const clientAutocompleteDropdown = document.getElementById('clientAutocompleteDropdown');
         const cartClientId = document.getElementById('cartClientId');
+        const cartTrabajadorId = document.getElementById('cartTrabajadorId');
         const selectedClientBadge = document.getElementById('selectedClientBadge');
         const selectedClientText = document.getElementById('selectedClientText');
 
@@ -602,11 +666,13 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             
             if (docType === '1' || docType === '3') {
                 cartClientId.value = '1';
+                cartTrabajadorId.value = '';
                 selectedClientText.innerText = 'Público General';
                 clientAutocompleteInput.value = '';
                 clearClientSelectionBtn.classList.add('d-none');
             } else {
                 cartClientId.value = '';
+                cartTrabajadorId.value = '';
                 selectedClientText.innerText = 'Se requiere RUC para Factura';
                 clientAutocompleteInput.value = '';
                 clearClientSelectionBtn.classList.add('d-none');
@@ -655,8 +721,11 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                     dropdownHtml += `
                         <button type="button" class="client-dropdown-item client-opt"
                             data-id="${c.id_cliente}"
+                            data-trabajador-id="${c.id_trabajador || ''}"
                             data-doc="${c.numero_documento}"
-                            data-name="${label.trim()}">
+                            data-name="${label.trim()}"
+                            data-es-trabajador="${c.es_trabajador}"
+                            data-tipo="${c.tipo_cliente}">
                             <strong>${c.numero_documento}</strong>&nbsp;–&nbsp;${label.trim()}
                         </button>
                     `;
@@ -687,9 +756,12 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 opt.addEventListener('mousedown', (e) => {
                     e.preventDefault(); // Impedir que el desenfoque cierre el menú antes de seleccionar
                     const id = opt.dataset.id;
+                    const tid = opt.dataset.trabajadorId;
                     const doc = opt.dataset.doc;
                     const name = opt.dataset.name;
-                    selectClient(id, doc, name);
+                    const es_trabajador = opt.dataset.esTrabajador === 'true';
+                    const tipo = opt.dataset.tipo;
+                    selectClient(id, tid, es_trabajador, doc, name, tipo);
                 });
             });
 
@@ -707,14 +779,47 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             clientAutocompleteDropdown.classList.remove('open');
         }
 
-        // Fijar el cliente seleccionado en el estado global de la venta
-        function selectClient(id, doc, name) {
-            cartClientId.value = id;
+        let currentVale = null;
+        let valeAplicado = false;
+        let montoDescuentoVale = 0;
+
+        // Fijar el cliente/trabajador seleccionado en el estado global de la venta
+        async function selectClient(id_cliente, id_trabajador, es_trabajador, doc, name, tipo) {
+            cartClientId.value = id_cliente || '';
+            cartTrabajadorId.value = id_trabajador || '';
             clientAutocompleteInput.value = `${doc} - ${name}`;
             selectedClientText.innerText = name;
             clearClientSelectionBtn.classList.remove('d-none');
             hideAutocompleteDropdown();
+            
+            currentVale = null;
+            valeAplicado = false;
+            montoDescuentoVale = 0;
+            document.getElementById('valeNavidenoBanner').classList.add('d-none');
+            
+            // Lógica de Método de Pago (Planilla solo para trabajadores UNP)
+            const optPlanilla = document.getElementById('optPlanilla');
+            const metodoPagoSelect = document.getElementById('metodoPagoSelect');
+            if (es_trabajador) {
+                optPlanilla.disabled = false;
+                optPlanilla.innerText = "Cargo a Planilla";
+                
+                // Mostrar banner de vale
+                document.getElementById('valeNavidenoBanner').classList.remove('d-none');
+                document.getElementById('valeInputGroup').classList.remove('d-none');
+                document.getElementById('valeAplicadoInfo').classList.add('d-none');
+                document.getElementById('codigoValeInput').value = '';
+                document.getElementById('codigoValeInput').disabled = false;
+                document.getElementById('btnAplicarVale').disabled = false;
+                document.getElementById('btnAplicarVale').innerText = 'Aplicar';
+            } else {
+                optPlanilla.disabled = true;
+                optPlanilla.innerText = "Cargo a Planilla (Solo Trabajadores)";
+                metodoPagoSelect.value = "1"; // Forzar a efectivo
+            }
+            
             validateSubmitBtn();
+            renderCart();
         }
 
         // Limpiar selección de cliente
@@ -722,14 +827,66 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             const docType = docTypeSelect.value;
             if (docType === '1' || docType === '3') {
                 cartClientId.value = '1';
+                cartTrabajadorId.value = '';
                 selectedClientText.innerText = 'Público General';
             } else {
                 cartClientId.value = '';
+                cartTrabajadorId.value = '';
                 selectedClientText.innerText = 'Se requiere RUC para Factura';
             }
             clientAutocompleteInput.value = '';
             clearClientSelectionBtn.classList.add('d-none');
+            
+            currentVale = null;
+            valeAplicado = false;
+            montoDescuentoVale = 0;
+            document.getElementById('valeNavidenoBanner').classList.add('d-none');
+            
             validateSubmitBtn();
+            renderCart();
+            
+            const optPlanilla = document.getElementById('optPlanilla');
+            const metodoPagoSelect = document.getElementById('metodoPagoSelect');
+            optPlanilla.disabled = true;
+            optPlanilla.innerText = "Cargo a Planilla (Solo Trabajadores)";
+            metodoPagoSelect.value = "1";
+        });
+
+        // Aplicar Vale Navideño
+        document.getElementById('btnAplicarVale').addEventListener('click', async () => {
+            const codigo = document.getElementById('codigoValeInput').value.trim();
+            if (!codigo) return;
+            
+            try {
+                const res = await fetch(`./controllers/C_Vale.php?action=buscar_codigo&codigo=${codigo}`);
+                const data = await res.json();
+                
+                if (data.success && data.data) {
+                    const vale = data.data;
+                    if (vale.estado != 1) {
+                        Swal.fire({ icon: 'error', text: 'El vale ya ha sido canjeado o está inactivo.' });
+                        return;
+                    }
+                    // Validar si el vale pertenece al cliente O al trabajador
+                    if (vale.id_cliente != cartClientId.value && vale.id_trabajador != cartTrabajadorId.value) {
+                        Swal.fire({ icon: 'error', text: 'El vale no pertenece a la persona seleccionada.' });
+                        return;
+                    }
+                    
+                    currentVale = vale;
+                    valeAplicado = true;
+                    
+                    document.getElementById('valeInputGroup').classList.add('d-none');
+                    document.getElementById('valeAplicadoInfo').classList.remove('d-none');
+                    document.getElementById('valeMontoText').innerText = `S/ ${parseFloat(vale.monto).toFixed(2)}`;
+                    
+                    renderCart();
+                } else {
+                    Swal.fire({ icon: 'error', text: 'Código de vale no encontrado.' });
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'error', text: 'Error al buscar el vale.' });
+            }
         });
 
         // Filtrar entrada numérica o caracteres de texto
@@ -913,7 +1070,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
 
                     // Seleccionarlo automáticamente
                     const cliLabel = newCli.apellidos ? `${newCli.apellidos}, ${newCli.nombres_razon_social}` : newCli.nombres_razon_social;
-                    selectClient(newCli.id_cliente, newCli.numero_documento, cliLabel);
+                    selectClient(newCli.id_cliente, null, false, newCli.numero_documento, cliLabel, newCli.tipo_cliente);
 
                     const modalEl = document.getElementById('nuevoClienteModal');
                     const modalInstance = bootstrap.Modal.getInstance(modalEl);
@@ -1127,7 +1284,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         // Validar si la venta cumple las condiciones mínimas para ser cobrada
         function validateSubmitBtn() {
             const hasItems = cart.length > 0;
-            const hasClient = cartClientId.value && cartClientId.value !== '';
+            const hasClient = (cartClientId.value && cartClientId.value !== '') || (cartTrabajadorId.value && cartTrabajadorId.value !== '');
             submitSaleBtn.disabled = !(hasItems && hasClient);
         }
 
@@ -1212,12 +1369,20 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
             cartList.innerHTML = cartHtml;
 
             // Desglose tributario (Total es precio con IGV incluido, subtotal = total/1.18)
-            const subtotalVal = totalGeneral / 1.18;
-            const igvVal = totalGeneral - subtotalVal;
+            // Lógica Vale
+            montoDescuentoVale = 0;
+            if (valeAplicado && currentVale) {
+                montoDescuentoVale = parseFloat(currentVale.monto);
+            }
 
+            const totalFinal = Math.max(0, totalGeneral - montoDescuentoVale);
+            const subtotalVal = totalFinal / 1.18;
+            const igvVal = totalFinal - subtotalVal;
+
+            document.getElementById('summaryDescuento').innerText = `- S/ ${montoDescuentoVale.toFixed(2)}`;
             summarySubtotal.innerText = `S/ ${subtotalVal.toFixed(2)}`;
             summaryIgv.innerText = `S/ ${igvVal.toFixed(2)}`;
-            summaryTotal.innerText = `S/ ${totalGeneral.toFixed(2)}`;
+            summaryTotal.innerText = `S/ ${totalFinal.toFixed(2)}`;
             validateSubmitBtn();
         }
 
@@ -1246,16 +1411,33 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
         // Enviar Transacción Final a base de datos por AJAX
         if (submitSaleBtn) {
             submitSaleBtn.addEventListener('click', async () => {
-                const id_cliente = parseInt(cartClientId.value);
+                const id_cliente = parseInt(cartClientId.value) || null;
+                const id_trabajador = parseInt(cartTrabajadorId.value) || null;
                 const tipo_comprobante = parseInt(docTypeSelect.value);
+                const metodo_pago = parseInt(document.getElementById('metodoPagoSelect').value);
                 
-                let total = 0;
-                cart.forEach(item => total += item.subtotal);
+                // Si es planilla, debe haber un trabajador seleccionado
+                if (metodo_pago === 2 && !id_trabajador) {
+                    Swal.fire({ icon: 'warning', text: 'Para pago por planilla, debe seleccionar un trabajador.'});
+                    return;
+                }
+                
+                let totalGeneral = 0;
+                cart.forEach(item => totalGeneral += item.subtotal);
+                const totalFinal = Math.max(0, totalGeneral - montoDescuentoVale);
+                
+                const pago_vale_aplicado = Math.min(totalGeneral, montoDescuentoVale);
+                const pago_efectivo = totalFinal;
 
                 const dataToSend = {
                     id_cliente,
+                    id_trabajador,
                     tipo_comprobante,
-                    total,
+                    metodo_pago,
+                    total: totalGeneral,
+                    id_vale: (valeAplicado && currentVale) ? currentVale.id_vale : null,
+                    pago_vale: pago_vale_aplicado,
+                    pago_efectivo: pago_efectivo,
                     cart: cart.map(item => ({
                         id_insumo: item.id_insumo,
                         piezas: item.cantidad,

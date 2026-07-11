@@ -4,10 +4,20 @@ class Conexion {
     private $dbh;
 
     private function __construct() {
-        $host = 'localhost';
-        $dbname = 'granja_pos';
-        $user = 'granja_user';
-        $pass = 'granja2026';
+        $httpHost = $_SERVER['HTTP_HOST'] ?? '';
+        $isLocalhost = (strpos($httpHost, 'localhost') !== false || strpos($httpHost, '127.0.0.1') !== false || php_sapi_name() === 'cli');
+
+        if ($isLocalhost) {
+            $host = 'localhost';
+            $dbname = 'granja_pos';
+            $user = 'granja_user';
+            $pass = 'granja2026';
+        } else {
+            $host = 'sql210.infinityfree.com';
+            $dbname = 'if0_42381931_granja_pos';
+            $user = 'if0_42381931';
+            $pass = 'For52638';
+        }
         
         $opciones = array(
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
@@ -51,6 +61,11 @@ class Conexion {
         }
     }
 
+    /**
+     * Lee y ejecuta el archivo base_datos.sql para crear el esquema y la data semilla.
+     * NOTA: Los STORED PROCEDURES han sido eliminados del SQL y migrados a PHP/PDO
+     * para compatibilidad con hosting compartido (InfinityFree) sin privilegios de CREATE PROCEDURE.
+     */
     private function inicializarBaseDatos($conexion) {
         $sqlPath = dirname(__DIR__) . '/base_datos.sql';
         if (!file_exists($sqlPath)) {

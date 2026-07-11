@@ -53,6 +53,11 @@ switch ($action) {
         echo json_encode(["success" => true, "data" => $vendedores]);
         break;
 
+    case 'beneficio_list':
+        $beneficios = $model->reporteBeneficio($desde, $hasta);
+        echo json_encode(["success" => true, "data" => $beneficios]);
+        break;
+
     default:
         echo json_encode(["success" => false, "mensaje" => "Acción no válida."]);
         break;

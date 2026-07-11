@@ -86,6 +86,9 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab">Clientes</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="beneficio-tab" data-bs-toggle="tab" data-bs-target="#beneficio" type="button" role="tab">Costo-Beneficio</button>
+        </li>
     </ul>
 
     <!-- Contenido de los Tabs -->
@@ -225,6 +228,30 @@ if (!isset($_SESSION['id_usuario']) || $_SESSION['rol'] !== 'Administrador') {
             </div>
         </div>
 
+        <!-- TAB 5: BENEFICIO -->
+        <div class="tab-pane fade" id="beneficio" role="tabpanel">
+            <div class="gp-card">
+                <h6 class="mb-4 fw-bold text-dark">Análisis Costo-Beneficio por Insumo</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tablaBeneficio">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Categoría</th>
+                                <th>Cantidad Vendida</th>
+                                <th class="text-end">Ingresos</th>
+                                <th class="text-end">Costo Total</th>
+                                <th class="text-end">Beneficio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Llenado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -237,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dataVentas = null;
     let dataInventario = null;
     let dataClientes = null;
+    let dataBeneficio = null;
 
     // Elementos DOM
     const btnFiltrar = document.getElementById('btnFiltrar');
@@ -267,7 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cargarResumen(),
             cargarVentas(),
             cargarInventario(),
-            cargarClientes()
+            cargarClientes(),
+            cargarBeneficio()
         ]);
 
         btnFiltrar.innerHTML = '<i class="bi bi-funnel"></i> Aplicar';
@@ -451,6 +480,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     }
 
+    async function cargarBeneficio() {
+        const desde = inputDesde.value;
+        const hasta = inputHasta.value;
+        try {
+            const res = await fetch(`./controllers/C_Reporte.php?action=beneficio_list&desde=${desde}&hasta=${hasta}`);
+            const json = await res.json();
+            if (json.success) {
+                dataBeneficio = json.data;
+                const tbody = document.querySelector('#tablaBeneficio tbody');
+                tbody.innerHTML = '';
+                if (dataBeneficio.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">No hay datos en este período</td></tr>';
+                } else {
+                    dataBeneficio.forEach(b => {
+                        let isPositive = parseFloat(b.beneficio) >= 0;
+                        tbody.innerHTML += `
+                            <tr>
+                                <td class="fw-semibold">${b.insumo}</td>
+                                <td>${b.categoria}</td>
+                                <td>${parseFloat(b.cantidad_vendida).toFixed(2)}</td>
+                                <td class="text-end">S/ ${parseFloat(b.ingresos).toFixed(2)}</td>
+                                <td class="text-end">S/ ${parseFloat(b.costo_total).toFixed(2)}</td>
+                                <td class="text-end fw-bold ${isPositive ? 'text-success' : 'text-danger'}">S/ ${parseFloat(b.beneficio).toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+        } catch (e) { console.error(e); }
+    }
+
     // ==========================================
     // EXPORTACIÓN A PDF (jsPDF + AutoTable)
     // ==========================================
@@ -519,6 +579,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 c.ultima_compra.substring(0,10)
             ]);
         }
+        else if (tabActivo === 'beneficio-tab') {
+            heads = [['Insumo', 'Categoría', 'Cantidad Vendida', 'Ingresos', 'Costo Total', 'Beneficio']];
+            body = dataBeneficio.map(b => [
+                b.insumo, b.categoria, parseFloat(b.cantidad_vendida).toFixed(2),
+                `S/ ${parseFloat(b.ingresos).toFixed(2)}`,
+                `S/ ${parseFloat(b.costo_total).toFixed(2)}`,
+                `S/ ${parseFloat(b.beneficio).toFixed(2)}`
+            ]);
+        }
 
         doc.autoTable({
             startY: 140,
@@ -580,6 +649,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Compras': parseInt(c.compras),
                 'Total Gastado': parseFloat(c.total_gastado),
                 'Última Compra': c.ultima_compra
+            }));
+            ws = XLSX.utils.json_to_sheet(data);
+        }
+        else if (tabActivo === 'beneficio-tab') {
+            const data = dataBeneficio.map(b => ({
+                'Insumo': b.insumo,
+                'Categoría': b.categoria,
+                'Cantidad Vendida': parseFloat(b.cantidad_vendida),
+                'Ingresos': parseFloat(b.ingresos),
+                'Costo Total': parseFloat(b.costo_total),
+                'Beneficio': parseFloat(b.beneficio)
             }));
             ws = XLSX.utils.json_to_sheet(data);
         }

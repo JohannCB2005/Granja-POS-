@@ -115,6 +115,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                                                     data-categoria="<?php echo $ins['categoria']; ?>"
                                                     data-unidad="<?php echo $ins['unidad']; ?>"
                                                     data-precio="<?php echo $ins['precio_unitario']; ?>"
+                                                    data-costo="<?php echo $ins['costo_produccion']; ?>"
                                                     data-stock="<?php echo $ins['stock_piezas']; ?>"
                                                     data-contenido="<?php echo htmlspecialchars($ins['contenido_estandar'] ?? ''); ?>"
                                                     title="Editar">
@@ -174,11 +175,15 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
-                            <label for="new_precio" class="form-label fw-semibold" style="font-size: 13px;">Precio (S/)</label>
+                        <div class="col-4">
+                            <label for="new_costo" class="form-label fw-semibold" style="font-size: 13px;">Costo base (S/)</label>
+                            <input type="number" class="form-control" id="new_costo" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="col-4">
+                            <label for="new_precio" class="form-label fw-semibold" style="font-size: 13px;">Precio Venta (S/)</label>
                             <input type="number" class="form-control" id="new_precio" step="0.01" min="0" placeholder="0.00" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <label for="new_stock" class="form-label fw-semibold" style="font-size: 13px;">Stock inicial</label>
                             <input type="number" class="form-control" id="new_stock" step="0.01" min="0" placeholder="0.00" required>
                         </div>
@@ -237,11 +242,15 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
-                            <label for="edit_precio" class="form-label fw-semibold" style="font-size: 13px;">Precio (S/)</label>
+                        <div class="col-4">
+                            <label for="edit_costo" class="form-label fw-semibold" style="font-size: 13px;">Costo base (S/)</label>
+                            <input type="number" class="form-control" id="edit_costo" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-4">
+                            <label for="edit_precio" class="form-label fw-semibold" style="font-size: 13px;">Precio Venta (S/)</label>
                             <input type="number" class="form-control" id="edit_precio" step="0.01" min="0" required>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
                             <label for="edit_stock" class="form-label fw-semibold" style="font-size: 13px;">Stock</label>
                             <input type="number" class="form-control" id="edit_stock" step="0.01" min="0" required>
                         </div>
@@ -298,6 +307,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const id_categoria = document.getElementById('new_categoria').value;
                 const id_unidad = document.getElementById('new_unidad').value;
                 const precio_unitario = document.getElementById('new_precio').value;
+                const costo_produccion = document.getElementById('new_costo').value;
                 const stock = document.getElementById('new_stock').value;
                 // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
                 const requiere_pesaje = document.getElementById('new_requiere_pesaje').checked;
@@ -307,7 +317,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                     const response = await fetch('./controllers/C_Insumo.php?action=crear', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nombre, id_categoria, id_unidad, precio_unitario, stock, contenido_estandar })
+                        body: JSON.stringify({ nombre, id_categoria, id_unidad, precio_unitario, costo_produccion, stock, contenido_estandar })
                     });
                     const data = await response.json();
 
@@ -343,6 +353,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 document.getElementById('edit_id').value = btn.dataset.id;
                 document.getElementById('edit_nombre').value = btn.dataset.nombre;
                 document.getElementById('edit_precio').value = btn.dataset.precio;
+                document.getElementById('edit_costo').value = btn.dataset.costo;
                 document.getElementById('edit_stock').value = btn.dataset.stock;
 
                 // Poblar el checkbox: si contenido_estandar está vacío o es null → el insumo requiere pesaje
@@ -371,6 +382,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const id_categoria = document.getElementById('edit_categoria').value;
                 const id_unidad = document.getElementById('edit_unidad').value;
                 const precio_unitario = document.getElementById('edit_precio').value;
+                const costo_produccion = document.getElementById('edit_costo').value;
                 const stock = document.getElementById('edit_stock').value;
                 // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
                 const requiere_pesaje = document.getElementById('edit_requiere_pesaje').checked;
@@ -380,7 +392,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                     const response = await fetch('./controllers/C_Insumo.php?action=actualizar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_insumo, nombre, id_categoria, id_unidad, precio_unitario, stock, contenido_estandar })
+                        body: JSON.stringify({ id_insumo, nombre, id_categoria, id_unidad, precio_unitario, costo_produccion, stock, contenido_estandar })
                     });
                     const data = await response.json();
 

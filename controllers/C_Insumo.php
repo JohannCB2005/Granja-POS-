@@ -45,6 +45,7 @@ switch ($action) {
         $id_unidad          = isset($input['id_unidad'])          ? intval($input['id_unidad'])          : 0;
         $nombre             = isset($input['nombre'])             ? trim($input['nombre'])               : '';
         $precio_unitario    = isset($input['precio_unitario'])    ? floatval($input['precio_unitario'])  : 0.0;
+        $costo_produccion   = isset($input['costo_produccion'])   ? floatval($input['costo_produccion']) : 0.0;
         $stock_piezas       = isset($input['stock'])              ? floatval($input['stock'])            : 0.0;
         // contenido_estandar: NULL si el checkbox de pesaje está activo (pavo/ave de peso variable)
         //                     0    si el checkbox está desactivado (insumo normal de ingreso directo)
@@ -60,7 +61,7 @@ switch ($action) {
         }
 
         // Crear entidad insumo y guardar en DB
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock_piezas, $contenido_estandar);
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar);
         if ($model->registrar($insumo)) {
             echo json_encode(["success" => true, "mensaje" => "Insumo registrado con éxito."]);
         } else {
@@ -79,6 +80,7 @@ switch ($action) {
         $id_unidad          = isset($input['id_unidad'])          ? intval($input['id_unidad'])          : 0;
         $nombre             = isset($input['nombre'])             ? trim($input['nombre'])               : '';
         $precio_unitario    = isset($input['precio_unitario'])    ? floatval($input['precio_unitario'])  : 0.0;
+        $costo_produccion   = isset($input['costo_produccion'])   ? floatval($input['costo_produccion']) : 0.0;
         $stock_piezas       = isset($input['stock'])              ? floatval($input['stock'])            : 0.0;
         // contenido_estandar: NULL si el checkbox de pesaje está activo (pavo/ave de peso variable)
         //                     0    si el checkbox está desactivado (insumo normal de ingreso directo)
@@ -94,7 +96,7 @@ switch ($action) {
         }
 
         // Actualizar datos del insumo
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $stock_piezas, $contenido_estandar);
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar);
         $insumo->id_insumo = $id_insumo;
 
         if ($model->actualizar($insumo)) {

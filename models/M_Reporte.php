@@ -162,5 +162,26 @@ class M_Reporte {
         $stmt->execute([':desde' => $desde, ':hasta' => $hasta]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function reporteBeneficio($desde, $hasta) {
+        $sql = "SELECT 
+                    i.nombre as insumo,
+                    c.nombre as categoria,
+                    SUM(dv.piezas) as cantidad_vendida,
+                    SUM(dv.peso_neto) as peso_vendido,
+                    SUM(dv.subtotal) as ingresos,
+                    SUM(IF(dv.peso_neto > 0, dv.peso_neto * dv.costo_unitario, dv.piezas * dv.costo_unitario)) as costo_total,
+                    SUM(dv.subtotal) - SUM(IF(dv.peso_neto > 0, dv.peso_neto * dv.costo_unitario, dv.piezas * dv.costo_unitario)) as beneficio
+                FROM detalle_ventas dv
+                INNER JOIN ventas v ON dv.id_venta = v.id_venta
+                INNER JOIN insumos i ON dv.id_insumo = i.id_insumo
+                INNER JOIN categorias c ON i.id_categoria = c.id_categoria
+                WHERE v.estado = 1 AND DATE(v.fecha) BETWEEN :desde AND :hasta
+                GROUP BY dv.id_insumo
+                ORDER BY beneficio DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':desde' => $desde, ':hasta' => $hasta]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

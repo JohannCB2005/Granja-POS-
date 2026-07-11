@@ -51,10 +51,11 @@ switch ($action) {
 
         $usuario = new Usuario($tipo_documento, $numero_documento, $nombres_razon_social, $apellidos, $direccion, $telefono, $id_rol, $username, $hashedPassword);
         
-        if ($model->registrarUsuario($usuario)) {
+        $resultado = $model->registrarUsuario($usuario);
+        if ($resultado['ok']) {
             echo json_encode(["success" => true, "mensaje" => "Usuario registrado con éxito."]);
         } else {
-            echo json_encode(["success" => false, "mensaje" => "Error al registrar el usuario. El usuario o documento podría ya existir."]);
+            echo json_encode(["success" => false, "mensaje" => $resultado['mensaje']]);
         }
         break;
 

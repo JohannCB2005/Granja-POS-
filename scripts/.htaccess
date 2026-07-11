@@ -1,0 +1,5 @@
+# Bloquea acceso web directo a todos los scripts de esta carpeta
+# Solo se pueden ejecutar desde CLI (línea de comandos)
+# Para InfinityFree: estos scripts deben ejecutarse desde phpMyAdmin o SSH si está disponible
+Order Deny,Allow
+Deny from all

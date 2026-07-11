@@ -29,6 +29,10 @@ $routes = [
     'nueva-venta' => ['Administrador', 'Vendedor'],
     'historial' => ['Administrador', 'Vendedor'],
     'reportes' => ['Administrador'],
+    'reportes-planilla' => ['Administrador'],
+    'trabajadores' => ['Administrador'],
+    'vales' => ['Administrador'],
+    'pedidos-online' => ['Administrador', 'Vendedor'],
     'caja' => ['Administrador', 'Vendedor'],
     'control-cajas' => ['Administrador']
 ];
@@ -55,6 +59,10 @@ $titles = [
     'nueva-venta' => 'Nueva Venta - Granja POS',
     'historial' => 'Historial de Ventas - Granja POS',
     'reportes' => 'Reportes - Granja POS',
+    'reportes-planilla' => 'Reporte Planilla - Granja POS',
+    'trabajadores' => 'Gestor de Trabajadores - Granja POS',
+    'vales' => 'Vales Navideños - Granja POS',
+    'pedidos-online' => 'Pedidos Online - Granja POS',
     'caja' => 'Mi Caja - Granja POS',
     'control-cajas' => 'Control de Cajas - Granja POS'
 ];
@@ -93,6 +101,18 @@ switch ($modulo) {
         break;
     case 'reportes':
         require_once 'views/V_reportes.php';
+        break;
+    case 'reportes-planilla':
+        require_once 'views/V_reporte_planilla.php';
+        break;
+    case 'trabajadores':
+        require_once 'views/V_trabajadores.php';
+        break;
+    case 'vales':
+        require_once 'views/V_vales.php';
+        break;
+    case 'pedidos-online':
+        require_once 'views/V_pedidos_online.php';
         break;
     case 'caja':
         require_once 'views/V_caja.php';

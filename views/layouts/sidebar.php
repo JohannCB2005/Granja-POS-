@@ -51,9 +51,19 @@ $rol = $_SESSION['rol'];
             </a>
         <?php endif; ?>
         <a href="index.php?modulo=clientes" class="menu-item <?php echo $moduloActual === 'clientes' ? 'active' : ''; ?>">
-            <i class="bi bi-person-badge-fill"></i>
+            <i class="bi bi-people-fill"></i>
             <span>Clientes</span>
         </a>
+        <a href="index.php?modulo=trabajadores" class="menu-item <?php echo $moduloActual === 'trabajadores' ? 'active' : ''; ?>">
+            <i class="bi bi-briefcase-fill"></i>
+            <span>Trabajadores</span>
+        </a>
+        <?php if ($rol === 'Administrador'): ?>
+            <a href="index.php?modulo=vales" class="menu-item <?php echo $moduloActual === 'vales' ? 'active' : ''; ?>">
+                <i class="bi bi-ticket-perforated-fill"></i>
+                <span>Vales Navideños</span>
+            </a>
+        <?php endif; ?>
 
         <!-- Grupo Operativo de Ventas y Cajas -->
         <div class="menu-header">Ventas & Caja</div>
@@ -64,6 +74,10 @@ $rol = $_SESSION['rol'];
         <a href="index.php?modulo=nueva-venta" class="menu-item <?php echo $moduloActual === 'nueva-venta' ? 'active' : ''; ?>">
             <i class="bi bi-cart-fill"></i>
             <span>Nueva Venta</span>
+        </a>
+        <a href="index.php?modulo=pedidos-online" class="menu-item <?php echo $moduloActual === 'pedidos-online' ? 'active' : ''; ?>">
+            <i class="bi bi-cloud-arrow-down-fill"></i>
+            <span>Pedidos Online</span>
         </a>
         <a href="index.php?modulo=historial" class="menu-item <?php echo $moduloActual === 'historial' ? 'active' : ''; ?>">
             <i class="bi bi-receipt-cutoff"></i>
@@ -80,6 +94,10 @@ $rol = $_SESSION['rol'];
             <a href="index.php?modulo=reportes" class="menu-item <?php echo $moduloActual === 'reportes' ? 'active' : ''; ?>">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Reportes</span>
+            </a>
+            <a href="index.php?modulo=reportes-planilla" class="menu-item <?php echo $moduloActual === 'reportes-planilla' ? 'active' : ''; ?>">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+                <span>Reportes Planilla</span>
             </a>
         <?php endif; ?>
     </div>
