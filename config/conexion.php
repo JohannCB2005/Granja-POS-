@@ -10,8 +10,8 @@ class Conexion {
         if ($isLocalhost) {
             $host = 'localhost';
             $dbname = 'granja_pos';
-            $user = 'granja_user';
-            $pass = 'granja2026';
+            $user = 'root';
+            $pass = '';
         } else {
             $host = 'sql210.infinityfree.com';
             $dbname = 'if0_42381931_granja_pos';
