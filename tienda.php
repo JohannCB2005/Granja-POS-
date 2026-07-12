@@ -152,6 +152,173 @@
             padding: 10px;
             margin-bottom: 15px;
         }
+
+        /* Botón de filtrar flotante */
+        .btn-filtrar-flotante {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(21, 128, 61, 0.4);
+            z-index: 1030;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-filtrar-flotante:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 6px 20px rgba(21, 128, 61, 0.5);
+            color: white;
+        }
+        .btn-filtrar-flotante:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* Badge de filtros */
+        .filtros-badge {
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-weight: 700;
+        }
+
+        /* Filtros laterales (Offcanvas) */
+        .offcanvas-start {
+            width: 320px !important;
+        }
+        .filtro-seccion {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .filtro-seccion:last-child {
+            border-bottom: none;
+        }
+        .filtro-seccion h6 {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .categoria-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+            cursor: pointer;
+        }
+        .categoria-option input {
+            cursor: pointer;
+        }
+
+        /* Slider Doble */
+        .range-slider-container {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            margin-top: 15px;
+        }
+        .range-slider-container input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 5px;
+            background: none;
+            pointer-events: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .range-slider-container input[type="range"]::-webkit-slider-thumb {
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            pointer-events: auto;
+            -webkit-appearance: none;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .range-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .range-slider-container input[type="range"]::-moz-range-thumb {
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            pointer-events: auto;
+            -moz-appearance: none;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        .range-slider-container input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.15);
+        }
+        .slider-track {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        /* Pills de Filtros Activos */
+        .pill-filtro {
+            background-color: #e8f5e9;
+            color: var(--primary);
+            border: 1px solid #c8e6c9;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .pill-filtro:hover {
+            background-color: #c8e6c9;
+        }
+        .pill-filtro button {
+            border: none;
+            background: none;
+            color: var(--primary);
+            padding: 0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Animación Sin Resultados */
+        .no-results-msg {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -181,6 +348,19 @@
             <h1>Productos Frescos Directo a ti</h1>
             <p>Reserva online, paga por Yape y recoge en la Granja UNP.</p>
         </div>
+
+        <!-- Buscador por nombre centralizado -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="input-group shadow-sm rounded-pill overflow-hidden border" style="border-color: #e5e7eb !important;">
+                    <span class="input-group-text bg-white border-0 ps-4 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="filtroNombre" class="form-control border-0 py-3 ps-2" style="font-size: 1rem; outline: none; box-shadow: none;" placeholder="¿Qué estás buscando hoy? Ej: Pavo, Huevo...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Pills de Filtros Activos -->
+        <div id="pillsFiltros" class="d-flex flex-wrap gap-2 mb-3 align-items-center"></div>
 
         <!-- Catálogo -->
         <div class="row g-4 my-4" id="catalogoContainer">
@@ -279,6 +459,80 @@
         </div>
     </div>
 
+    <!-- Botón de filtrar flotante -->
+    <button class="btn-filtrar-flotante" type="button" data-bs-toggle="offcanvas" data-bs-target="#filtrosOffcanvas" id="btnFiltrarFlotante">
+        <i class="bi bi-sliders"></i>
+        <span>Filtrar</span>
+        <span id="filtrosCountBadge" class="filtros-badge d-none">0</span>
+    </button>
+
+    <!-- Offcanvas de Filtros -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="filtrosOffcanvas">
+        <div class="offcanvas-header bg-light">
+            <h5 class="offcanvas-title fw-bold"><i class="bi bi-sliders me-2 text-success"></i>Filtros</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <!-- Categorías -->
+            <div class="filtro-seccion">
+                <h6><i class="bi bi-tag text-success"></i> Categorías</h6>
+                <div id="categoriasFiltroContainer">
+                    <!-- Checkboxes dinámicos -->
+                </div>
+            </div>
+
+            <!-- Rango de Precios -->
+            <div class="filtro-seccion">
+                <h6><i class="bi bi-cash-stack text-success"></i> Rango de Precio</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="input-group input-group-sm w-45">
+                        <span class="input-group-text">S/</span>
+                        <input type="number" id="inputMin" class="form-control" placeholder="Min" min="0">
+                    </div>
+                    <span class="text-muted">al</span>
+                    <div class="input-group input-group-sm w-45">
+                        <span class="input-group-text">S/</span>
+                        <input type="number" id="inputMax" class="form-control" placeholder="Max" min="0">
+                    </div>
+                </div>
+                <!-- Double Range Slider -->
+                <div class="range-slider-container">
+                    <div class="slider-track" id="sliderTrack"></div>
+                    <input type="range" id="sliderMin" min="0" max="100" value="0">
+                    <input type="range" id="sliderMax" min="0" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- Ordenar por -->
+            <div class="filtro-seccion">
+                <h6><i class="bi bi-sort-down text-success"></i> Ordenar por</h6>
+                <div class="d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ordenarProductos" id="ordenDefault" value="default" checked>
+                        <label class="form-check-label" for="ordenDefault">Relevancia</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ordenarProductos" id="ordenPrecioAsc" value="precio_asc">
+                        <label class="form-check-label" for="ordenPrecioAsc">Precio: Menor a Mayor</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ordenarProductos" id="ordenPrecioDesc" value="precio_desc">
+                        <label class="form-check-label" for="ordenPrecioDesc">Precio: Mayor a Menor</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ordenarProductos" id="ordenNombreAsc" value="nombre_asc">
+                        <label class="form-check-label" for="ordenNombreAsc">Nombre: A-Z</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <button class="btn btn-outline-secondary w-100 mb-2 py-2 fw-semibold" id="btnLimpiarFiltros">
+                <i class="bi bi-trash"></i> Limpiar Filtros
+            </button>
+        </div>
+    </div>
+
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -286,8 +540,18 @@
         let catalogo = [];
         let cart = [];
 
+        // Estado de los filtros
+        let filtroNombreVal = '';
+        let filtroCategoriasVal = [];
+        let filtroPrecioMin = 0;
+        let filtroPrecioMax = 1000;
+        let precioLimiteMin = 0;
+        let precioLimiteMax = 1000;
+        let filtroOrdenVal = 'default';
+
         document.addEventListener('DOMContentLoaded', () => {
             cargarCatalogo();
+            inicializarEventosFiltros();
         });
 
         async function cargarCatalogo() {
@@ -296,23 +560,327 @@
                 const json = await res.json();
                 if (json.success) {
                     catalogo = json.data;
-                    renderCatalogo();
+                    calcularLimitesPrecio();
+                    inicializarFiltroCategorias();
+                    aplicarFiltros();
                 }
             } catch (e) {
                 console.error(e);
             }
         }
 
-        function renderCatalogo() {
+        function calcularLimitesPrecio() {
+            if (catalogo.length === 0) return;
+            const precios = catalogo.map(item => parseFloat(item.precio_unitario));
+            precioLimiteMin = Math.floor(Math.min(...precios));
+            precioLimiteMax = Math.ceil(Math.max(...precios));
+            
+            // Evitar cruces o valores iguales
+            if (precioLimiteMin === precioLimiteMax) {
+                precioLimiteMax = precioLimiteMin + 1;
+            }
+
+            filtroPrecioMin = precioLimiteMin;
+            filtroPrecioMax = precioLimiteMax;
+
+            const inputMin = document.getElementById('inputMin');
+            const inputMax = document.getElementById('inputMax');
+            const sliderMin = document.getElementById('sliderMin');
+            const sliderMax = document.getElementById('sliderMax');
+
+            inputMin.min = precioLimiteMin;
+            inputMin.max = precioLimiteMax;
+            inputMin.value = precioLimiteMin;
+
+            inputMax.min = precioLimiteMin;
+            inputMax.max = precioLimiteMax;
+            inputMax.value = precioLimiteMax;
+
+            sliderMin.min = precioLimiteMin;
+            sliderMin.max = precioLimiteMax;
+            sliderMin.value = precioLimiteMin;
+
+            sliderMax.min = precioLimiteMin;
+            sliderMax.max = precioLimiteMax;
+            sliderMax.value = precioLimiteMax;
+
+            actualizarDisenoSlider();
+        }
+
+        function actualizarDisenoSlider() {
+            const sliderMin = document.getElementById('sliderMin');
+            const sliderMax = document.getElementById('sliderMax');
+            const track = document.getElementById('sliderTrack');
+
+            if (parseInt(sliderMin.value) > parseInt(sliderMax.value)) {
+                if (document.activeElement === sliderMin) {
+                    sliderMin.value = sliderMax.value;
+                } else {
+                    sliderMax.value = sliderMin.value;
+                }
+            }
+
+            const valMin = parseInt(sliderMin.value);
+            const valMax = parseInt(sliderMax.value);
+
+            document.getElementById('inputMin').value = valMin;
+            document.getElementById('inputMax').value = valMax;
+
+            filtroPrecioMin = valMin;
+            filtroPrecioMax = valMax;
+
+            const percentMin = ((valMin - precioLimiteMin) / (precioLimiteMax - precioLimiteMin)) * 100;
+            const percentMax = ((valMax - precioLimiteMin) / (precioLimiteMax - precioLimiteMin)) * 100;
+
+            track.style.background = `linear-gradient(to right, #e5e7eb ${percentMin}%, var(--primary) ${percentMin}%, var(--primary) ${percentMax}%, #e5e7eb ${percentMax}%)`;
+        }
+
+        function inicializarFiltroCategorias() {
+            const container = document.getElementById('categoriasFiltroContainer');
+            if (catalogo.length === 0) return;
+            const categoriasUnicas = [...new Set(catalogo.map(item => item.categoria))];
+            
+            let html = '';
+            categoriasUnicas.forEach(cat => {
+                html += `
+                    <div class="categoria-option">
+                        <div class="form-check w-100">
+                            <input class="form-check-input filter-category-checkbox" type="checkbox" value="${cat}" id="chkCat_${cat}">
+                            <label class="form-check-label w-100" for="chkCat_${cat}">
+                                ${cat}
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            document.querySelectorAll('.filter-category-checkbox').forEach(chk => {
+                chk.addEventListener('change', () => {
+                    filtroCategoriasVal = Array.from(document.querySelectorAll('.filter-category-checkbox:checked')).map(c => c.value);
+                    aplicarFiltros();
+                });
+            });
+        }
+
+        function inicializarEventosFiltros() {
+            document.getElementById('filtroNombre').addEventListener('input', (e) => {
+                filtroNombreVal = e.target.value.trim().toLowerCase();
+                aplicarFiltros();
+            });
+
+            const inputMin = document.getElementById('inputMin');
+            const inputMax = document.getElementById('inputMax');
+            const sliderMin = document.getElementById('sliderMin');
+            const sliderMax = document.getElementById('sliderMax');
+
+            inputMin.addEventListener('change', (e) => {
+                let val = Math.max(precioLimiteMin, Math.min(precioLimiteMax, parseInt(e.target.value) || 0));
+                if (val > filtroPrecioMax) val = filtroPrecioMax;
+                inputMin.value = val;
+                sliderMin.value = val;
+                actualizarDisenoSlider();
+                aplicarFiltros();
+            });
+
+            inputMax.addEventListener('change', (e) => {
+                let val = Math.max(precioLimiteMin, Math.min(precioLimiteMax, parseInt(e.target.value) || 0));
+                if (val < filtroPrecioMin) val = filtroPrecioMin;
+                inputMax.value = val;
+                sliderMax.value = val;
+                actualizarDisenoSlider();
+                aplicarFiltros();
+            });
+
+            sliderMin.addEventListener('input', () => {
+                actualizarDisenoSlider();
+                aplicarFiltros();
+            });
+
+            sliderMax.addEventListener('input', () => {
+                actualizarDisenoSlider();
+                aplicarFiltros();
+            });
+
+            document.querySelectorAll('input[name="ordenarProductos"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    filtroOrdenVal = e.target.value;
+                    aplicarFiltros();
+                });
+            });
+
+            document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltros);
+        }
+
+        function limpiarFiltros() {
+            filtroNombreVal = '';
+            document.getElementById('filtroNombre').value = '';
+
+            document.querySelectorAll('.filter-category-checkbox').forEach(chk => chk.checked = false);
+            filtroCategoriasVal = [];
+
+            filtroPrecioMin = precioLimiteMin;
+            filtroPrecioMax = precioLimiteMax;
+            document.getElementById('inputMin').value = precioLimiteMin;
+            document.getElementById('inputMax').value = precioLimiteMax;
+            document.getElementById('sliderMin').value = precioLimiteMin;
+            document.getElementById('sliderMax').value = precioLimiteMax;
+            actualizarDisenoSlider();
+
+            document.getElementById('ordenDefault').checked = true;
+            filtroOrdenVal = 'default';
+
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            let productos = [...catalogo];
+
+            // 1. Filtrar por nombre
+            if (filtroNombreVal !== '') {
+                productos = productos.filter(p => p.nombre.toLowerCase().includes(filtroNombreVal));
+            }
+
+            // 2. Filtrar por categorías
+            if (filtroCategoriasVal.length > 0) {
+                productos = productos.filter(p => filtroCategoriasVal.includes(p.categoria));
+            }
+
+            // 3. Filtrar por precio
+            productos = productos.filter(p => {
+                const precio = parseFloat(p.precio_unitario);
+                return precio >= filtroPrecioMin && precio <= filtroPrecioMax;
+            });
+
+            // 4. Ordenamiento
+            if (filtroOrdenVal === 'precio_asc') {
+                productos.sort((a, b) => parseFloat(a.precio_unitario) - parseFloat(b.precio_unitario));
+            } else if (filtroOrdenVal === 'precio_desc') {
+                productos.sort((a, b) => parseFloat(b.precio_unitario) - parseFloat(a.precio_unitario));
+            } else if (filtroOrdenVal === 'nombre_asc') {
+                productos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            }
+
+            renderProductosCatalogo(productos);
+            actualizarBadgesYFiltrosPills();
+        }
+
+        function actualizarBadgesYFiltrosPills() {
+            let totalFiltrosActivos = 0;
+            const containerPills = document.getElementById('pillsFiltros');
+            let htmlPills = '';
+
+            if (filtroNombreVal !== '') {
+                totalFiltrosActivos++;
+                htmlPills += `
+                    <div class="pill-filtro">
+                        Buscar: "${filtroNombreVal}"
+                        <button onclick="removerFiltroNombre()"><i class="bi bi-x-circle-fill"></i></button>
+                    </div>
+                `;
+            }
+
+            if (filtroCategoriasVal.length > 0) {
+                totalFiltrosActivos += filtroCategoriasVal.length;
+                filtroCategoriasVal.forEach(cat => {
+                    htmlPills += `
+                        <div class="pill-filtro">
+                            Categoría: ${cat}
+                            <button onclick="removerFiltroCategoria('${cat}')"><i class="bi bi-x-circle-fill"></i></button>
+                        </div>
+                    `;
+                });
+            }
+
+            if (filtroPrecioMin > precioLimiteMin || filtroPrecioMax < precioLimiteMax) {
+                totalFiltrosActivos++;
+                htmlPills += `
+                    <div class="pill-filtro">
+                        Precio: S/ ${filtroPrecioMin} - S/ ${filtroPrecioMax}
+                        <button onclick="removerFiltroPrecio()"><i class="bi bi-x-circle-fill"></i></button>
+                    </div>
+                `;
+            }
+
+            if (filtroOrdenVal !== 'default') {
+                totalFiltrosActivos++;
+                let labelOrden = 'Relevancia';
+                if (filtroOrdenVal === 'precio_asc') labelOrden = 'Precio ↑';
+                if (filtroOrdenVal === 'precio_desc') labelOrden = 'Precio ↓';
+                if (filtroOrdenVal === 'nombre_asc') labelOrden = 'Nombre A-Z';
+                
+                htmlPills += `
+                    <div class="pill-filtro">
+                        Orden: ${labelOrden}
+                        <button onclick="removerFiltroOrden()"><i class="bi bi-x-circle-fill"></i></button>
+                    </div>
+                `;
+            }
+
+            if (totalFiltrosActivos > 0) {
+                htmlPills += `
+                    <button class="btn btn-link btn-sm text-decoration-none text-muted fw-bold ps-1" onclick="limpiarFiltros()">
+                        Limpiar todos
+                    </button>
+                `;
+            }
+
+            containerPills.innerHTML = htmlPills;
+
+            const badge = document.getElementById('filtrosCountBadge');
+            if (totalFiltrosActivos > 0) {
+                badge.innerText = totalFiltrosActivos;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+
+        window.removerFiltroNombre = () => {
+            filtroNombreVal = '';
+            document.getElementById('filtroNombre').value = '';
+            aplicarFiltros();
+        };
+
+        window.removerFiltroCategoria = (cat) => {
+            const chk = document.getElementById(`chkCat_${cat}`);
+            if (chk) chk.checked = false;
+            filtroCategoriasVal = filtroCategoriasVal.filter(c => c !== cat);
+            aplicarFiltros();
+        };
+
+        window.removerFiltroPrecio = () => {
+            filtroPrecioMin = precioLimiteMin;
+            filtroPrecioMax = precioLimiteMax;
+            document.getElementById('inputMin').value = precioLimiteMin;
+            document.getElementById('inputMax').value = precioLimiteMax;
+            document.getElementById('sliderMin').value = precioLimiteMin;
+            document.getElementById('sliderMax').value = precioLimiteMax;
+            actualizarDisenoSlider();
+            aplicarFiltros();
+        };
+
+        window.removerFiltroOrden = () => {
+            document.getElementById('ordenDefault').checked = true;
+            filtroOrdenVal = 'default';
+            aplicarFiltros();
+        };
+
+        function renderProductosCatalogo(productos) {
             const container = document.getElementById('catalogoContainer');
-            if (catalogo.length === 0) {
-                container.innerHTML = '<div class="col-12 text-center py-5 text-muted">No hay productos disponibles por el momento.</div>';
+            if (productos.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5 text-muted no-results-msg">
+                        <i class="bi bi-search-heart fs-1 mb-3 d-block text-success"></i>
+                        <p class="fw-semibold">No se encontraron productos con los filtros seleccionados.</p>
+                        <button class="btn btn-success btn-sm mt-2 fw-semibold px-3 rounded-pill" onclick="limpiarFiltros()">Limpiar Filtros</button>
+                    </div>
+                `;
                 return;
             }
 
             let html = '';
-            catalogo.forEach(item => {
-                // Icono según categoría
+            productos.forEach(item => {
                 let icon = 'bi-box-seam';
                 let cat = item.categoria.toLowerCase();
                 if (cat.includes('ave') || cat.includes('pavo')) icon = 'bi-twitter';
