@@ -325,13 +325,23 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
-                <img src="assets/logo_unp.png" alt="Logo" height="30" onerror="this.src='https://via.placeholder.com/30?text=UNP'">
-                <span>Granja UNP <small class="text-muted fw-normal fs-6">Click & Collect</small></span>
-            </a>
+        <div class="container justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <a href="index.php" class="btn btn-light btn-sm fw-semibold d-none d-md-block">Acceso Personal</a>
+                <!-- Botón de Filtrar -->
+                <button class="btn btn-light rounded-pill px-3 position-relative border shadow-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#filtrosOffcanvas" id="btnFiltrarNavbar" style="height: 38px;" title="Filtrar productos">
+                    <i class="bi bi-sliders text-success"></i>
+                    <span class="fw-semibold text-dark fs-6">Filtros</span>
+                    <span id="filtrosCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light d-none" style="font-size: 0.65rem; padding: 3px 6px;">0</span>
+                </button>
+
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                    <img src="assets/logo_unp.png" alt="Logo" height="30" onerror="this.src='https://via.placeholder.com/30?text=UNP'">
+                    <span>Granja UNP <small class="text-muted fw-normal fs-6">Click & Collect</small></span>
+                </a>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <!-- Mi Cesta -->
                 <button class="btn btn-dark position-relative rounded-pill px-3 fw-semibold shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
                     <i class="bi bi-bag-fill me-1"></i> Mi Cesta
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" id="cartBadge">
@@ -459,12 +469,6 @@
         </div>
     </div>
 
-    <!-- Botón de filtrar flotante -->
-    <button class="btn-filtrar-flotante" type="button" data-bs-toggle="offcanvas" data-bs-target="#filtrosOffcanvas" id="btnFiltrarFlotante">
-        <i class="bi bi-sliders"></i>
-        <span>Filtrar</span>
-        <span id="filtrosCountBadge" class="filtros-badge d-none">0</span>
-    </button>
 
     <!-- Offcanvas de Filtros -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="filtrosOffcanvas">
