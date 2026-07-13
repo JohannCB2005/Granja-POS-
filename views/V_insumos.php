@@ -118,6 +118,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                                                     data-costo="<?php echo $ins['costo_produccion']; ?>"
                                                     data-stock="<?php echo $ins['stock_piezas']; ?>"
                                                     data-contenido="<?php echo htmlspecialchars($ins['contenido_estandar'] ?? ''); ?>"
+                                                    data-imagen="<?php echo htmlspecialchars($ins['imagen'] ?? ''); ?>"
                                                     title="Editar">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </button>
@@ -188,6 +189,10 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                             <input type="number" class="form-control" id="new_stock" step="0.01" min="0" placeholder="0.00" required>
                         </div>
                     </div>
+                    <div class="mb-3 mt-3">
+                        <label for="new_imagen" class="form-label fw-semibold" style="font-size: 13px;"><i class="bi bi-image text-success me-1"></i>Imagen del producto (Opcional)</label>
+                        <input type="file" class="form-control" id="new_imagen" accept="image/*">
+                    </div>
                     <!-- Checkbox: Activa el modal de pesaje en balanza al momento de realizar la venta -->
                     <div class="mt-3 p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
                         <div class="form-check form-switch mb-0">
@@ -255,6 +260,14 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                             <input type="number" class="form-control" id="edit_stock" step="0.01" min="0" required>
                         </div>
                     </div>
+                    <div class="mb-3 mt-3">
+                        <label for="edit_imagen" class="form-label fw-semibold" style="font-size: 13px;"><i class="bi bi-image text-success me-1"></i>Nueva Imagen (Opcional)</label>
+                        <input type="file" class="form-control" id="edit_imagen" accept="image/*">
+                        <div id="edit_imagen_preview" class="mt-2 d-none">
+                            <span class="text-muted" style="font-size: 11px;">Imagen actual:</span>
+                            <img src="" id="edit_imagen_img" class="d-block mt-1 border rounded" style="max-height: 85px; max-width: 100%; object-fit: contain;">
+                        </div>
+                    </div>
                     <!-- Checkbox: Activa el modal de pesaje en balanza al momento de realizar la venta -->
                     <div class="mt-3 p-3 rounded-3" style="background: #f0fdf4; border: 1px solid #bbf7d0;">
                         <div class="form-check form-switch mb-0">
@@ -298,7 +311,7 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
         }
 
         <?php if ($isAdmin): ?>
-        // 2. Registro de Insumo por AJAX
+         // 2. Registro de Insumo por AJAX
         const formNuevo = document.getElementById('formNuevoInsumo');
         if (formNuevo) {
             formNuevo.addEventListener('submit', async (e) => {
@@ -309,15 +322,28 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const precio_unitario = document.getElementById('new_precio').value;
                 const costo_produccion = document.getElementById('new_costo').value;
                 const stock = document.getElementById('new_stock').value;
-                // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
                 const requiere_pesaje = document.getElementById('new_requiere_pesaje').checked;
-                const contenido_estandar = requiere_pesaje ? null : 0;
+
+                const formData = new FormData();
+                formData.append('nombre', nombre);
+                formData.append('id_categoria', id_categoria);
+                formData.append('id_unidad', id_unidad);
+                formData.append('precio_unitario', precio_unitario);
+                formData.append('costo_produccion', costo_produccion);
+                formData.append('stock', stock);
+                if (!requiere_pesaje) {
+                    formData.append('contenido_estandar', '0');
+                }
+
+                const fileInput = document.getElementById('new_imagen');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append('imagen', fileInput.files[0]);
+                }
 
                 try {
                     const response = await fetch('./controllers/C_Insumo.php?action=crear', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nombre, id_categoria, id_unidad, precio_unitario, costo_produccion, stock, contenido_estandar })
+                        body: formData
                     });
                     const data = await response.json();
 
@@ -356,6 +382,20 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 document.getElementById('edit_costo').value = btn.dataset.costo;
                 document.getElementById('edit_stock').value = btn.dataset.stock;
 
+                // Previsualizar la imagen actual si existe
+                const imagen = btn.dataset.imagen;
+                const previewDiv = document.getElementById('edit_imagen_preview');
+                const previewImg = document.getElementById('edit_imagen_img');
+                // Limpiar input file viejo
+                document.getElementById('edit_imagen').value = '';
+                if (imagen && imagen !== '' && imagen !== 'null') {
+                    previewImg.src = `./assets/productos/${imagen}`;
+                    previewDiv.classList.remove('d-none');
+                } else {
+                    previewDiv.classList.add('d-none');
+                    previewImg.src = '';
+                }
+
                 // Poblar el checkbox: si contenido_estandar está vacío o es null → el insumo requiere pesaje
                 const contenido = btn.dataset.contenido;
                 document.getElementById('edit_requiere_pesaje').checked = (!contenido || contenido === '' || contenido === 'null');
@@ -384,15 +424,29 @@ $isAdmin = ($_SESSION['rol'] === 'Administrador');
                 const precio_unitario = document.getElementById('edit_precio').value;
                 const costo_produccion = document.getElementById('edit_costo').value;
                 const stock = document.getElementById('edit_stock').value;
-                // Si el checkbox está activo, se envía null (balanza requerida). Si no, se envía 0 (ingreso directo).
                 const requiere_pesaje = document.getElementById('edit_requiere_pesaje').checked;
-                const contenido_estandar = requiere_pesaje ? null : 0;
+
+                const formData = new FormData();
+                formData.append('id_insumo', id_insumo);
+                formData.append('nombre', nombre);
+                formData.append('id_categoria', id_categoria);
+                formData.append('id_unidad', id_unidad);
+                formData.append('precio_unitario', precio_unitario);
+                formData.append('costo_produccion', costo_produccion);
+                formData.append('stock', stock);
+                if (!requiere_pesaje) {
+                    formData.append('contenido_estandar', '0');
+                }
+
+                const fileInput = document.getElementById('edit_imagen');
+                if (fileInput && fileInput.files.length > 0) {
+                    formData.append('imagen', fileInput.files[0]);
+                }
 
                 try {
                     const response = await fetch('./controllers/C_Insumo.php?action=actualizar', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_insumo, nombre, id_categoria, id_unidad, precio_unitario, costo_produccion, stock, contenido_estandar })
+                        body: formData
                     });
                     const data = await response.json();
 

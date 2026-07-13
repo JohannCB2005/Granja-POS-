@@ -60,8 +60,28 @@ switch ($action) {
             exit;
         }
 
+        // Procesar subida de imagen si existe
+        $imagen_db = null;
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['imagen']['tmp_name'];
+            $fileName = $_FILES['imagen']['name'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            if (in_array($fileExtension, $allowedExtensions)) {
+                $uploadDir = dirname(__DIR__) . '/assets/productos/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                $newFileName = 'insumo_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                $dest_path = $uploadDir . $newFileName;
+                if (move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $imagen_db = $newFileName;
+                }
+            }
+        }
+
         // Crear entidad insumo y guardar en DB
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar);
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar, null, $imagen_db);
         if ($model->registrar($insumo)) {
             echo json_encode(["success" => true, "mensaje" => "Insumo registrado con éxito."]);
         } else {
@@ -95,9 +115,38 @@ switch ($action) {
             exit;
         }
 
+        // Procesar subida de imagen si existe
+        $imagen_db = null;
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $fileTmpPath = $_FILES['imagen']['tmp_name'];
+            $fileName = $_FILES['imagen']['name'];
+            $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            if (in_array($fileExtension, $allowedExtensions)) {
+                $uploadDir = dirname(__DIR__) . '/assets/productos/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                // Borrar imagen vieja si existe
+                $insumoViejo = $model->obtenerPorId($id_insumo);
+                if ($insumoViejo && !empty($insumoViejo['imagen'])) {
+                    $oldFilePath = $uploadDir . $insumoViejo['imagen'];
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath);
+                    }
+                }
+
+                $newFileName = 'insumo_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                $dest_path = $uploadDir . $newFileName;
+                if (move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $imagen_db = $newFileName;
+                }
+            }
+        }
+
         // Actualizar datos del insumo
-        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar);
-        $insumo->id_insumo = $id_insumo;
+        $insumo = new Insumo($id_categoria, $id_unidad, $nombre, $precio_unitario, $costo_produccion, $stock_piezas, $contenido_estandar, $id_insumo, $imagen_db);
 
         if ($model->actualizar($insumo)) {
             echo json_encode(["success" => true, "mensaje" => "Insumo actualizado con éxito."]);

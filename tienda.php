@@ -46,16 +46,34 @@
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, var(--primary) 0%, #064e3b 100%);
-            padding: 60px 0;
+            position: relative;
+            background-image: url('assets/tienda_hero.png');
+            background-size: cover;
+            background-position: center;
+            padding: 80px 20px;
             color: white;
             border-radius: 20px;
-            margin: 20px;
-            box-shadow: 0 10px 25px rgba(21, 128, 61, 0.2);
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(21, 128, 61, 0.15);
             text-align: center;
+            overflow: hidden;
         }
-        .hero h1 { font-weight: 800; letter-spacing: -1px; margin-bottom: 15px; }
-        .hero p { font-size: 1.1rem; opacity: 0.9; }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(21, 128, 61, 0.85) 0%, rgba(6, 78, 59, 0.9) 100%);
+            z-index: 1;
+        }
+        .hero h1, .hero p {
+            position: relative;
+            z-index: 2;
+        }
+        .hero h1 { font-weight: 800; letter-spacing: -1px; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .hero p { font-size: 1.1rem; opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 
         /* Product Cards */
         .product-card {
@@ -75,12 +93,24 @@
         }
         .product-img-wrap {
             height: 160px;
-            background: var(--secondary);
+            background: #f9fafb;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
             color: #9ca3af;
+            overflow: hidden;
+            border-bottom: 1px solid #f3f4f6;
+            position: relative;
+        }
+        .product-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .product-card:hover .product-img-wrap img {
+            transform: scale(1.08);
         }
         .product-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
         .product-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; color: var(--text-dark); }
@@ -885,17 +915,23 @@
 
             let html = '';
             productos.forEach(item => {
-                let icon = 'bi-box-seam';
-                let cat = item.categoria.toLowerCase();
-                if (cat.includes('ave') || cat.includes('pavo')) icon = 'bi-twitter';
-                else if (cat.includes('huevo')) icon = 'bi-egg-fill';
-                else if (cat.includes('cerdo')) icon = 'bi-piggy-bank-fill';
+                let imgHtml = '';
+                if (item.imagen && item.imagen !== '' && item.imagen !== 'null') {
+                    imgHtml = `<img src="assets/productos/${item.imagen}" alt="${item.nombre}">`;
+                } else {
+                    let icon = 'bi-box-seam';
+                    let cat = item.categoria.toLowerCase();
+                    if (cat.includes('ave') || cat.includes('pavo')) icon = 'bi-twitter';
+                    else if (cat.includes('huevo')) icon = 'bi-egg-fill';
+                    else if (cat.includes('lácteo') || cat.includes('leche')) icon = 'bi-droplet-fill';
+                    imgHtml = `<i class="bi ${icon}"></i>`;
+                }
 
                 html += `
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="product-card">
                             <div class="product-img-wrap">
-                                <i class="bi ${icon}"></i>
+                                ${imgHtml}
                             </div>
                             <div class="product-info">
                                 <div class="d-flex justify-content-between align-items-start mb-2">

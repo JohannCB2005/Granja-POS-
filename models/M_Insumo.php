@@ -35,7 +35,7 @@ class M_Insumo {
     public function registrar(Insumo $insumo) {
         try {
             $sql = "INSERT INTO insumos (id_categoria, id_unidad, nombre, precio_unitario, costo_produccion, 
-                    stock_piezas, contenido_estandar, estado) VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
+                    stock_piezas, contenido_estandar, estado, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)";
             $stmt = $this->conexion->prepare($sql);
             
             $stmt->execute([
@@ -45,7 +45,8 @@ class M_Insumo {
                 $insumo->precio_unitario,
                 $insumo->costo_produccion,
                 $insumo->stock_piezas,
-                $insumo->contenido_estandar  // NULL = peso variable (pavos), número = peso fijo (sacos)
+                $insumo->contenido_estandar,  // NULL = peso variable (pavos), número = peso fijo (sacos)
+                $insumo->imagen
             ]);
             
             return true;
@@ -63,7 +64,7 @@ class M_Insumo {
         try {
             $sql = "SELECT i.id_insumo, i.id_categoria, i.id_unidad, c.nombre AS categoria,
                     u.nombre AS unidad, u.abreviatura, i.nombre, i.precio_unitario, i.costo_produccion,
-                    i.stock_piezas, i.contenido_estandar, i.estado 
+                    i.stock_piezas, i.contenido_estandar, i.estado, i.imagen 
                     FROM insumos i
                     INNER JOIN categorias c ON i.id_categoria = c.id_categoria
                     INNER JOIN unidades_medida u ON i.id_unidad = u.id_unidad
@@ -103,7 +104,8 @@ class M_Insumo {
     public function actualizar(Insumo $insumo) {
         try {
             $sql = "UPDATE insumos SET id_categoria = ?, id_unidad = ?, nombre = ?, 
-                    precio_unitario = ?, costo_produccion = ?, stock_piezas = ?, contenido_estandar = ? WHERE id_insumo = ?";
+                    precio_unitario = ?, costo_produccion = ?, stock_piezas = ?, contenido_estandar = ?,
+                    imagen = COALESCE(?, imagen) WHERE id_insumo = ?";
             $stmt = $this->conexion->prepare($sql);
             
             $stmt->execute([
@@ -114,6 +116,7 @@ class M_Insumo {
                 $insumo->costo_produccion,
                 $insumo->stock_piezas,
                 $insumo->contenido_estandar,  // NULL = peso variable (pavos)
+                $insumo->imagen,
                 $insumo->id_insumo
             ]);
             
