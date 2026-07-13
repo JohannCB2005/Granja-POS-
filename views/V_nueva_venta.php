@@ -1453,7 +1453,7 @@ $cajaAbierta = $modelCaja->obtenerCajaAbierta($_SESSION['id_usuario']);
                 
                 Swal.fire({
                     title: '¿Confirmar venta?',
-                    text: `Se registrará una ${docLabel} por un total de S/ ${total.toFixed(2)}`,
+                    text: `Se registrará una ${docLabel} por un total de S/ ${totalFinal.toFixed(2)}`,
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#15803d',

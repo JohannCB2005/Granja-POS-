@@ -19,7 +19,7 @@ class M_Ecommerce {
 
     public function getCatalogo() {
         try {
-            $sql = "SELECT i.id_insumo, i.nombre, i.precio_unitario, i.stock_piezas, i.contenido_estandar, 
+            $sql = "SELECT i.id_insumo, i.nombre, i.precio_unitario, i.stock_piezas, i.contenido_estandar, i.imagen,
                            um.abreviatura AS unidad, c.nombre AS categoria
                     FROM insumos i
                     INNER JOIN unidades_medida um ON i.id_unidad = um.id_unidad

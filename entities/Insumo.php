@@ -19,6 +19,7 @@ class Insumo {
     public $stock_piezas;        // Cantidad de piezas/unidades físicas en almacén
     public $contenido_estandar;  // Kg/L por pieza. NULL = peso variable (aves)
     public $estado;
+    public $imagen;
 
     public function __construct(
         $id_categoria = null,
@@ -28,7 +29,8 @@ class Insumo {
         $costo_produccion = 0.0,
         $stock_piezas = 0.0,
         $contenido_estandar = null,
-        $id_insumo = null
+        $id_insumo = null,
+        $imagen = null
     ) {
         $this->id_insumo          = $id_insumo;
         $this->id_categoria       = $id_categoria;
@@ -39,6 +41,7 @@ class Insumo {
         $this->stock_piezas       = $stock_piezas;
         $this->contenido_estandar = $contenido_estandar;
         $this->estado             = 1;
+        $this->imagen             = $imagen;
     }
 }
 ?>

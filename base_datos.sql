@@ -126,6 +126,7 @@ CREATE TABLE `insumos` (
   `stock_piezas` decimal(10,2) NOT NULL DEFAULT 0.00,
   `contenido_estandar` decimal(10,2) DEFAULT NULL COMMENT 'Peso estándar por pieza en Kg. NULL = peso variable (aves vivas).',
   `estado` tinyint(1) DEFAULT 1,
+  `imagen` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_insumo`),
   KEY `id_categoria` (`id_categoria`),
   KEY `id_unidad` (`id_unidad`),
