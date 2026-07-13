@@ -93,7 +93,7 @@
         }
         .product-img-wrap {
             height: 160px;
-            background: #f9fafb;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -102,11 +102,14 @@
             overflow: hidden;
             border-bottom: 1px solid #f3f4f6;
             position: relative;
+            padding: 12px;
         }
         .product-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .product-card:hover .product-img-wrap img {
