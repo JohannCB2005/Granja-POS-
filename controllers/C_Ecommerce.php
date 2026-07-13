@@ -11,6 +11,16 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $items]);
         break;
 
+    case 'get_pedido':
+        $id = intval($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'mensaje' => 'ID inválido']);
+            exit;
+        }
+        $pedido = M_Ecommerce::singleton()->getPedidoPublico($id);
+        echo json_encode(['success' => (bool)$pedido, 'data' => $pedido]);
+        break;
+
     case 'crear_pedido':
         $raw = file_get_contents("php://input");
         $data = json_decode($raw, true);
@@ -74,6 +84,20 @@ switch ($action) {
 
         $res = M_Ecommerce::singleton()->gestionarPedido($id_pedido, $accion, $_SESSION['id_usuario']);
         echo json_encode(['success' => $res['ok'], 'mensaje' => $res['mensaje']]);
+        break;
+
+    case 'get_pedido':
+        $id = intval($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'mensaje' => 'ID inválido']);
+            exit;
+        }
+        $pedido = M_Ecommerce::singleton()->getPedidoPublico($id);
+        if ($pedido) {
+            echo json_encode(['success' => true, 'data' => $pedido]);
+        } else {
+            echo json_encode(['success' => false, 'mensaje' => 'Pedido no encontrado']);
+        }
         break;
 
     default:

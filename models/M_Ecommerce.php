@@ -106,6 +106,28 @@ class M_Ecommerce {
         }
     }
 
+    public function getPedidoPublico($id_pedido) {
+        try {
+            $sql = "SELECT p.id_pedido, p.fecha_pedido, p.total, p.estado, p.nro_operacion_yape,
+                           per.numero_documento, per.nombres_razon_social, per.apellidos, per.telefono, per.direccion
+                    FROM pedidos_online p
+                    INNER JOIN clientes c ON p.id_cliente = c.id_cliente
+                    INNER JOIN personas per ON c.id_persona = per.id_persona
+                    WHERE p.id_pedido = ?";
+            $stmt = $this->conexion->prepare($sql);
+            $stmt->execute([$id_pedido]);
+            $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($pedido) {
+                $pedido['detalles'] = $this->getDetallesPedido($id_pedido);
+                return $pedido;
+            }
+            return null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
     public function listarPedidos() {
         try {
             $sql = "SELECT p.id_pedido, p.fecha_pedido, p.total, p.nro_operacion_yape, p.estado,

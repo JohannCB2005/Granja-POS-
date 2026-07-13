@@ -7,6 +7,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tienda Online - Granja UNP</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/logo_unp.png">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -440,67 +442,7 @@
         </div>
     </div>
 
-    <!-- Modal Checkout & Yape -->
-    <div class="modal fade" id="modalCheckout" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow-lg">
-                <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
-                    <h4 class="modal-title fw-bold">Finalizar Compra</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body px-4">
-                    
-                    <!-- Paso 1: Datos -->
-                    <div id="stepDatos">
-                        <p class="text-muted small mb-4">Ingresa tus datos para registrar el pedido y poder recogerlo en nuestras instalaciones.</p>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">DNI</label>
-                            <input type="text" class="form-control" id="coDni" maxlength="8">
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label fw-semibold small">Nombres</label>
-                                <input type="text" class="form-control" id="coNombres">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label fw-semibold small">Apellidos</label>
-                                <input type="text" class="form-control" id="coApellidos">
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold small">Teléfono / Celular</label>
-                            <input type="text" class="form-control" id="coTelefono" maxlength="15">
-                        </div>
-                        <button class="btn btn-dark w-100 py-2.5 fw-bold rounded-3" id="btnContinuarPago">Continuar a Pago</button>
-                    </div>
 
-                    <!-- Paso 2: Pago Yape -->
-                    <div id="stepPago" class="d-none text-center py-2">
-                        <div class="badge bg-dark rounded-pill px-3 py-2 mb-3 fs-6">Total a Pagar: <span id="yapeTotal"></span></div>
-                        <p class="fw-bold" style="color: #00e0a1;">Escanea el QR de Yape</p>
-                        <!-- QR Falso para diseño -->
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=YAPE_GRANJA_UNP" class="yape-qr" alt="QR Yape">
-                        <p class="fw-semibold text-muted small mb-1">Titular: Universidad Nacional de Piura</p>
-                        
-                        <hr class="my-4 dashed">
-
-                        <div class="text-start">
-                            <label class="form-label fw-bold text-dark">N° de Operación Yape</label>
-                            <input type="text" class="form-control form-control-lg text-center fw-bold text-success font-monospace" id="coOperacion" placeholder="Ej: 12345678" maxlength="12">
-                            <div class="form-text mt-2"><i class="bi bi-info-circle"></i> Ingresa los dígitos de la operación confirmada.</div>
-                        </div>
-
-                        <div class="d-flex gap-2 mt-4">
-                            <button class="btn btn-light w-50 fw-semibold" id="btnVolverDatos">Volver</button>
-                            <button class="btn btn-success w-50 fw-bold shadow" id="btnConfirmarPedido">Confirmar Pedido</button>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <!-- Offcanvas de Filtros -->
@@ -1065,94 +1007,13 @@
             container.innerHTML = html;
             badge.innerText = qtyTotal;
             totalEl.innerText = `S/ ${sumTotal.toFixed(2)}`;
-            document.getElementById('yapeTotal').innerText = `S/ ${sumTotal.toFixed(2)}`;
         }
 
-        // Checkout Logic
-        const modalCheckoutObj = new bootstrap.Modal(document.getElementById('modalCheckout'));
-        
+        // Checkout Logic — redirect to checkout (reorganizado en views/public/)
         document.getElementById('btnCheckout').addEventListener('click', () => {
-            document.getElementById('stepDatos').classList.remove('d-none');
-            document.getElementById('stepPago').classList.add('d-none');
-            modalCheckoutObj.show();
-        });
-
-        document.getElementById('btnContinuarPago').addEventListener('click', () => {
-            const dni = document.getElementById('coDni').value.trim();
-            const nom = document.getElementById('coNombres').value.trim();
-            const tel = document.getElementById('coTelefono').value.trim();
-
-            if (!dni || !nom || !tel) {
-                Swal.fire({ icon: 'warning', text: 'Por favor completa DNI, Nombres y Teléfono.' });
-                return;
-            }
-            if (dni.length !== 8) {
-                Swal.fire({ icon: 'warning', text: 'El DNI debe tener 8 dígitos.' });
-                return;
-            }
-
-            document.getElementById('stepDatos').classList.add('d-none');
-            document.getElementById('stepPago').classList.remove('d-none');
-        });
-
-        document.getElementById('btnVolverDatos').addEventListener('click', () => {
-            document.getElementById('stepPago').classList.add('d-none');
-            document.getElementById('stepDatos').classList.remove('d-none');
-        });
-
-        document.getElementById('btnConfirmarPedido').addEventListener('click', async () => {
-            const nro_op = document.getElementById('coOperacion').value.trim();
-            if (!nro_op || nro_op.length < 6) {
-                Swal.fire({ icon: 'warning', text: 'Ingresa un Número de Operación válido de Yape.' });
-                return;
-            }
-
-            const btn = document.getElementById('btnConfirmarPedido');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
-
-            let total = cart.reduce((acc, el) => acc + el.subtotal, 0);
-
-            const payload = {
-                cliente: {
-                    dni: document.getElementById('coDni').value.trim(),
-                    nombres: document.getElementById('coNombres').value.trim(),
-                    apellidos: document.getElementById('coApellidos').value.trim(),
-                    telefono: document.getElementById('coTelefono').value.trim(),
-                    direccion: ''
-                },
-                nro_operacion: nro_op,
-                total: total,
-                carrito: cart
-            };
-
-            try {
-                const res = await fetch('./controllers/C_Ecommerce.php?action=crear_pedido', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await res.json();
-                
-                if (result.success) {
-                    modalCheckoutObj.hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Pedido Recibido!',
-                        text: `Tu pedido #${result.id_pedido} ha sido registrado. Acércate a la Granja UNP para recoger tus productos.`,
-                        confirmButtonColor: '#15803d'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: result.mensaje });
-                }
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Error de conexión.' });
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Confirmar Pedido';
-            }
+            if (cart.length === 0) return;
+            sessionStorage.setItem('granja_cart', JSON.stringify(cart));
+            window.location.href = 'views/public/V_checkout.php';
         });
     </script>
 </body>
